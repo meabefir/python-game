@@ -1,0 +1,20 @@
+111111111111111111111111111111111111111
+seed = random.randint(0,9999)
+scale = 50
+octaves = 50  # 1
+persistence = .5  # .5
+lacunarity = 2  # 2
+repeat = 999999999
+
+if height > 65:
+    img = 'stone'
+elif 45 < height <= 65:
+    img = 'dirt'
+elif 20 < height <= 45:
+    img = 'grass'
+elif 15 <= height <= 20:
+    img = 'sand'
+else:
+    img = ''
+
+2222222222222222222222222222222222222222
