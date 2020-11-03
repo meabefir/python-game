@@ -6,7 +6,9 @@ class Input():
             self.key_held[value] = False
 
     def update_held(self,event):
-        self.key_held[self.key_code[event.key]] = True
+        if event.key in self.key_code.keys():
+            self.key_held[self.key_code[event.key]] = True
 
     def update_released(self,event):
-        self.key_held[self.key_code[event.key]] = False
+        if event.key in self.key_code.keys():
+            self.key_held[self.key_code[event.key]] = False

@@ -1,6 +1,7 @@
 import pygame, sys, random, os, noise, math
 from helper import *
 from input import *
+from player import *
 
 clock = pygame.time.Clock()
 pygame.init()
@@ -69,7 +70,7 @@ def create_tile_at(x, y):
     # print(height)
     if height > 55:
         img = 'stone'
-        if height2 > 57:
+        if height2 > 55:
             img = 'iron'
         elif 50 > height2 > 40:
             img = 'coal'
@@ -130,37 +131,26 @@ scroll_ammount = 5
 keys = {'w': False, 's': False, 'a': False, 'd': False}
 
 ################ PLAYER
-player_img = pygame.image.load('images/player/player.png')
-player_rect = pygame.Rect(0, 0, player_img.get_width(), player_img.get_height())
-player_speed = 3
-movement = [0, 0]
-last_facing_direction = 0
-light_sources.append(LightSource((0, 0), player_rect))
+# player_img = pygame.image.load('images/player/player.png')
+# player_rect = pygame.Rect(0, 0, player_img.get_width(), player_img.get_height())
+# player_speed = 3
+# movement = [0, 0]
+# last_facing_direction = 0
+
 ############################################################ GAME LOOP
 
 input = Input()
+player = Player(0,0)
+light_sources.append(LightSource((0, 0), player.rect))
 
 while True:
     display.fill(colors['aqua'])
 
-    movement = [0, 0]
-    for key,value in input.key_held.items():
-        if value == True:
-            if key == 'w':
-                movement[1] -= player_speed
-            elif key == 's':
-                movement[1] += player_speed
-            elif key == 'a':
-                movement[0] -= player_speed
-            elif key == 'd':
-                movement[0] += player_speed
-    if movement[0] != 0:
-        last_facing_direction = sign(movement[0])
-    player_rect.x += movement[0]
-    player_rect.y += movement[1]
+    player.update(input.key_held)
 
-    true_scroll[0] += (player_rect.x - true_scroll[0] - window_size_small[0] / 2 + player_rect.w // 2)  # /10
-    true_scroll[1] += (player_rect.y - true_scroll[1] - window_size_small[1] / 2 + player_rect.h // 2)  # /10
+
+    true_scroll[0] += (player.rect.x - true_scroll[0] - window_size_small[0] / 2 + player.rect.w // 2)  # /10
+    true_scroll[1] += (player.rect.y - true_scroll[1] - window_size_small[1] / 2 + player.rect.h // 2)  # /10
     scroll = true_scroll.copy()
     scroll[0] = int(scroll[0])
     scroll[1] = int(scroll[1])
@@ -194,8 +184,7 @@ while True:
         light.draw(over)
 
     ################## DRAW PLAYER
-    display.blit(pygame.transform.flip(player_img, not last_facing_direction, 0),
-                 (player_rect.x - scroll[0], player_rect.y - scroll[1]))
+    player.draw(display,scroll)
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -205,8 +194,8 @@ while True:
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
                 # light_sources.append(LightSource((mx,my)))
-                player_rect.x = mx
-                player_rect.y = my
+                player.rect.x = mx
+                player.rect.y = my
             ############################## ZOOM
             elif event.button == 5:
                 ratio -= .2
