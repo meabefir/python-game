@@ -28,7 +28,8 @@ class Player():
         self.rect.x += self.movement[0]
         self.rect.y += self.movement[1]
 
-    def draw(self,surface,scroll):
+    def draw(self,surface,camera_xy):
+        camera_x, camera_y = camera_xy
         # pygame.draw.rect(surface, (255, 0, 0),
         #                  (self.rect.x - scroll[0], self.rect.y - scroll[1], self.rect.w, self.rect.h))
-        surface.blit(pygame.transform.flip(self.image, not self.last_facing_direction, 0),(self.rect.x-self.rect_x_offset-scroll[0],self.rect.y-self.rect_y_offset-scroll[1]))
+        surface.blit(pygame.transform.flip(self.image, not self.last_facing_direction, 0),(self.rect.x-self.rect_x_offset-camera_x,self.rect.y-self.rect_y_offset-camera_y))

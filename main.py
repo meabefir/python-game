@@ -2,6 +2,9 @@ import pygame, sys, random, os, noise, math
 from helper import *
 from input import *
 from player import *
+from lightSource import *
+import camera as Camera
+
 
 clock = pygame.time.Clock()
 pygame.init()
@@ -15,7 +18,6 @@ def set_display(ratio):
     display = pygame.Surface(window_size_small)
     return display, window_size_small
 
-
 display, window_size_small = set_display(ratio)
 
 def load_images():
@@ -28,34 +30,6 @@ def load_images():
                 images[name].append(img)
             else:
                 images[name] = [img]
-
-
-class LightSource():
-    def __init__(self, pos, target=None):
-        if target is None:
-            self.x = pos[0]
-            self.y = pos[1]
-        else:
-            self.x = target.x + target.w // 2
-            self.y = target.y + target.h // 2
-        self.target = target
-        self.radius = 50
-        self.max_radius = self.radius * 1.2
-        self.min_radius = self.radius * 0.8
-
-    def flicker(self):
-        self.radius += random.randint(0, 2) - 1
-        self.radius = clamp(self.radius, self.min_radius, self.max_radius)
-
-    def draw(self, surface):
-        if self.target is not None:
-            self.x += (self.target.x + self.target.w // 2 - self.x) / 2
-            self.y += (self.target.y + self.target.h // 2 - self.y) / 2
-            pygame.draw.circle(surface, (255, 255, 255), (int(self.x - scroll[0]), int(self.y - scroll[1])),
-                               int(light.radius))
-        else:
-            pygame.draw.circle(surface, (255, 255, 255), (int(light.x - scroll[0]), int(light.y - scroll[1])),
-                               int(light.radius))
 
 def get_perlin_height(x,y):
     height = abs(
@@ -119,48 +93,31 @@ persistence = .5  # .5
 lacunarity = 2  # 2
 repeat = 999999999
 tile_size = 16
-chunk_size = 8
+chunk_size = 50
 # generate some random tiles
 tiles = []
 
 light_sources = []
-# scroll = [-window_size[0]//(2*ratio),-window_size[1]//(2*ratio)]
-scroll = [0, 0]
-true_scroll = [0, 0]
-scroll_ammount = 5
-keys = {'w': False, 's': False, 'a': False, 'd': False}
-
-################ PLAYER
-# player_img = pygame.image.load('images/player/player.png')
-# player_rect = pygame.Rect(0, 0, player_img.get_width(), player_img.get_height())
-# player_speed = 3
-# movement = [0, 0]
-# last_facing_direction = 0
-
-############################################################ GAME LOOP
 
 input = Input()
 player = Player(0,0)
+camera = Camera.Camera(0,0)
+camera.set_target(player)
 light_sources.append(LightSource((0, 0), player.rect))
 
+############################################################ GAME LOOP
 while True:
     display.fill(colors['aqua'])
 
     player.update(input.key_held)
-
-
-    true_scroll[0] += (player.rect.x - true_scroll[0] - window_size_small[0] / 2 + player.rect.w // 2)  # /10
-    true_scroll[1] += (player.rect.y - true_scroll[1] - window_size_small[1] / 2 + player.rect.h // 2)  # /10
-    scroll = true_scroll.copy()
-    scroll[0] = int(scroll[0])
-    scroll[1] = int(scroll[1])
+    camera.update(window_size_small)
 
     # dinamically display tiles
     tiles = []
     for y in range(window_size_small[1] // (tile_size * chunk_size) + 3):
         for x in range(window_size_small[0] // (tile_size * chunk_size) + 3):
-            chunk_x = x - 1 + int(round(scroll[0] / (chunk_size * tile_size)))
-            chunk_y = y - 1 + int(round(scroll[1] / (chunk_size * tile_size)))
+            chunk_x = x - 1 + int(round(camera.x / (chunk_size * tile_size)))
+            chunk_y = y - 1 + int(round(camera.y / (chunk_size * tile_size)))
             chunk = str(chunk_x) + ';' + str(chunk_y)
             if chunk not in world_map:
                 world_map[chunk] = generate_chunk(chunk_x, chunk_y)
@@ -169,10 +126,10 @@ while True:
 
     # draw the tiles
     for tile in tiles:
-        display.blit(tile[1], (int(tile[0][0] * tile_size - scroll[0]), int(tile[0][1] * tile_size - scroll[1])))
+        display.blit(tile[1], (int(tile[0][0] * tile_size - camera.x), int(tile[0][1] * tile_size - camera.y)))
 
     m_pos = pygame.mouse.get_pos()
-    mx, my = (m_pos[0] / ratio + scroll[0]), (m_pos[1] / ratio + scroll[1])
+    mx, my = (m_pos[0] / ratio + camera.x), (m_pos[1] / ratio + camera.y)
 
     # SHADOW
     over = pygame.Surface(window_size_small)
@@ -180,11 +137,12 @@ while True:
     over.fill((0, 0, 0))
 
     for light in light_sources:
+
         light.flicker()
-        light.draw(over)
+        light.draw(over,camera)
 
     ################## DRAW PLAYER
-    player.draw(display,scroll)
+    player.draw(display,camera.offset)
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -208,8 +166,6 @@ while True:
             ################################ MOVEMENT INPUT
         if event.type == pygame.KEYDOWN:
             input.update_held(event)
-            # if chr(event.key) in 'wasd':
-            #     keys[chr(event.key)] = True
             ## ESCAPE
             if event.key == pygame.K_ESCAPE:
                 pygame.quit()
@@ -219,11 +175,9 @@ while True:
                 print(seed,offset)
         if event.type == pygame.KEYUP:
             input.update_released(event)
-            # if chr(event.key) in 'wasd':
-            #     keys[chr(event.key)] = False
 
     # DRAW SHADOW OVER EVERYTHING ELSE
-    #display.blit(over, (0, 0))
+    display.blit(over, (0, 0))
 
     screen.blit(pygame.transform.scale(display, window_size), (0, 0))
     pygame.display.update()
