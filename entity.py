@@ -19,13 +19,15 @@ class Entity():
         self.rect_x_offset = rect_x_offset
         self.rect_y_offset = rect_y_offset
 
+    def set_type(self,type):
+        self.type = type
+
     def set_pickupable(self):
         self.pickupable = True
 
-    def draw_rect(self, surface, camera_xy):
-        camera_x, camera_y = camera_xy
+    def draw_rect(self, surface, camera):
         pygame.draw.rect(surface, (255, 0, 0),
-                         (self.rect.x - camera_x, self.rect.y - camera_y, self.rect.w, self.rect.h),1)
+                         (self.rect.x - camera.x, self.rect.y - camera.y, self.rect.w, self.rect.h),1)
 
     def draw(self, surface, camera_xy):
         camera_x, camera_y = camera_xy

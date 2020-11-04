@@ -8,7 +8,8 @@ class Player(Entity):
         self.center_x = self.rect.x + self.rect.w//2
         self.center_y = self.rect.y + self.rect.h//2
         self.movement = [0, 0]
-        self.speed = 2
+        self.base_speed = 2
+        self.speed = self.base_speed
         self.last_facing_direction = 0
 
         self.z = 0
@@ -16,7 +17,7 @@ class Player(Entity):
         self.bob_speed = self.speed / 5
 
         self.inventory = []
-        self.pickup_range = 50
+        self.pickup_range = 501
         self.click_action = 'gather'
 
     def update(self, key_held):
@@ -32,12 +33,15 @@ class Player(Entity):
 
         self.bob()
 
-    def simulate_click(self,mx,my,entities):
+    def simulate_click(self,mx,my,chunk_x,chunk_y,world_map):
         if self.click_action == 'gather':
-            for en in entities:
-                if en.rect.collidepoint(mx,my) and math.dist((en.center_x,en.center_y),(self.center_x,self.center_y)) <= self.pickup_range and en.pickupable:
+            chunk = str(chunk_x)+';'+str(chunk_y)
+            print(chunk)
+            for en in world_map[chunk]:
+                if en.pickupable and en.rect.collidepoint(mx,my) and math.dist((en.center_x,en.center_y),(self.center_x,self.center_y)) <= self.pickup_range:
                     self.inventory.append(en)
-                    entities.remove(en)
+                    world_map[chunk].remove(en)
+                    break
 
     def get_movement(self, key_held):
         self.movement = [0, 0]
@@ -51,6 +55,11 @@ class Player(Entity):
                     self.movement[0] -= self.speed
                 elif key == 'd':
                     self.movement[0] += self.speed
+                elif key == 'shift':
+                    self.speed = self.base_speed*2
+            else:
+                if key == 'shift':
+                    self.speed = self.base_speed
 
     def bob(self):
         if self.movement[0] != 0 or self.movement[1] != 0:
@@ -61,16 +70,15 @@ class Player(Entity):
             else:
                 self.z -= self.bob_speed
                 if self.z <= 0:
-                    self.z_target = self.speed
+                    self.z_target = self.base_speed
         else:
             if self.z > 0:
                 self.z -= self.bob_speed
 
-    def draw(self, surface, camera_xy):
-        camera_x, camera_y = camera_xy
-        self.draw_rect(surface, camera_xy)
+    def draw(self, surface, camera):
+        self.draw_rect(surface, camera)
         img = pygame.transform.flip(self.image, not self.last_facing_direction, 0)
         surface.blit(img,
                      (
-                         self.rect.x - self.rect_x_offset - camera_x,
-                         self.rect.y - self.rect_y_offset - self.z - camera_y))
+                         self.rect.x - self.rect_x_offset - camera.x,
+                         self.rect.y - self.rect_y_offset - self.z - camera.y))
