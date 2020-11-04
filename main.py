@@ -3,15 +3,14 @@ from helper import *
 from input import *
 from player import *
 from lightSource import *
-import camera as Camera
-
+from camera import *
+from entity import *
 
 clock = pygame.time.Clock()
 pygame.init()
 window_size = (900, 600)
 ratio = 2
 screen = pygame.display.set_mode(window_size)
-
 
 def set_display(ratio):
     window_size_small = (int(window_size[0] // ratio), int(window_size[1] // ratio))
@@ -20,17 +19,20 @@ def set_display(ratio):
 
 display, window_size_small = set_display(ratio)
 
-def load_images():
-    for f, sf, files in os.walk('images/tiles'):
-        for file in files:
-            name = file.split('_')[0]
-            file_path = f + '\\' + file
-            img = pygame.image.load(file_path)
-            if name in images:
-                images[name].append(img)
-            else:
-                images[name] = [img]
+def load_images(*args):
+    print("LOADING IMAGES")
+    for path in args:
+        for f, sf, files in os.walk(path):
+            for file in files:
+                name = file.split('_')[0].split('.')[0]
+                file_path = f + '\\' + file
+                img = pygame.image.load(file_path)
+                if name in images:
+                    images[name].append(img)
+                else:
+                    images[name] = [img]
 
+################################### WORLD GEN ##############################
 def get_perlin_height(x,y):
     height = abs(
         noise.pnoise2(x / scale, y / scale, octaves=octaves, persistence=persistence, lacunarity=lacunarity))
@@ -40,6 +42,8 @@ def get_perlin_height(x,y):
 def create_tile_at(x, y):
     height = get_perlin_height(x+seed,y+seed)
     height2 = get_perlin_height(x+seed2,y+seed2)
+    chunk_x = x//chunk_size
+    chunk_y = y//chunk_size
 
     # print(height)
     if height > 55:
@@ -52,6 +56,12 @@ def create_tile_at(x, y):
         img = 'dirt'
     elif 20 < height <= 45:
         img = 'grass'
+        if random.randint(1,50) == 1:
+            new_en = Entity(images['branch'][0],x*tile_size+random.randint(0,tile_size),y*tile_size+random.randint(0,tile_size),0,0)
+            new_en.set_pickupable()
+            chunk = str(chunk_x)+';'+str(chunk_y)
+            #world_map[chunk].append
+            entities.append(new_en)
     elif 15 <= height <= 20:
         img = 'sand'
     else:
@@ -75,14 +85,12 @@ def generate_chunk(x, y):
                 chunk_tiles.append(tile)
     return chunk_tiles
 
-
-world_map = {}
-alpha = 0
-
+###############################################################################
 colors = {'aqua': (198, 252, 255)}
 
 images = {}
-load_images()
+load_images('images/tiles','images/entities','images/player')
+print(images)
 
 ########################## RANDOM GENERATION
 seed = random.randint(0,9999999)
@@ -95,19 +103,27 @@ repeat = 999999999
 tile_size = 16
 chunk_size = 50
 # generate some random tiles
-tiles = []
+
 
 light_sources = []
+tiles = []
+entities = []
+world_map = {}
+
 
 input = Input()
-player = Player(0,0)
-camera = Camera.Camera(0,0)
+player = Player(0,0,images['player'][0])
+camera = Camera(0,0)
 camera.set_target(player)
 light_sources.append(LightSource((0, 0), player.rect))
 
 ############################################################ GAME LOOP
 while True:
     display.fill(colors['aqua'])
+
+    ################################### MOUSE INPUT
+    m_pos = pygame.mouse.get_pos()
+    mx, my = (m_pos[0] / ratio + camera.x), (m_pos[1] / ratio + camera.y)
 
     player.update(input.key_held)
     camera.update(window_size_small)
@@ -128,13 +144,14 @@ while True:
     for tile in tiles:
         display.blit(tile[1], (int(tile[0][0] * tile_size - camera.x), int(tile[0][1] * tile_size - camera.y)))
 
-    m_pos = pygame.mouse.get_pos()
-    mx, my = (m_pos[0] / ratio + camera.x), (m_pos[1] / ratio + camera.y)
+    for en in entities:
+        en.draw(display,camera.offset)
+        en.draw_rect(display,camera.offset)
 
     ################## DRAW PLAYER
     player.draw(display,camera.offset)
 
-    # SHADOW
+    ############################################## SHADOW
     shadow = pygame.Surface(window_size_small)
     shadow.set_colorkey((255, 255, 255))
     shadow.fill((0, 0, 0))
@@ -149,12 +166,9 @@ while True:
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
-            ### create light source
-        if event.type == pygame.MOUSEBUTTONDOWN:
+        if event.type == pygame.MOUSEBUTTONDOWN: ########### CLICK
             if event.button == 1:
-                # light_sources.append(LightSource((mx,my)))
-                player.rect.x = mx
-                player.rect.y = my
+                player.simulate_click(mx,my,entities)
             ############################## ZOOM
             elif event.button == 5:
                 ratio -= .2
@@ -176,8 +190,6 @@ while True:
                 print(seed,offset)
         if event.type == pygame.KEYUP:
             input.update_released(event)
-
-
 
     screen.blit(pygame.transform.scale(display, window_size), (0, 0))
     pygame.display.update()
