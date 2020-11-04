@@ -1,12 +1,13 @@
 import pygame
+from entity import *
 from helper import *
 
-class Player():
+class Player(Entity):
     def __init__(self,x,y):
         self.image = pygame.image.load('images/player/player.png')
-        self.rect = pygame.Rect(x,y,14,14)
-        self.rect_x_offset = 0
-        self.rect_y_offset = 0
+        self.rect = pygame.Rect(x,y,8,8)
+        self.rect_x_offset = 3
+        self.rect_y_offset = 10
         self.movement = [0,0]
         self.speed = 3
         self.last_facing_direction = 0
@@ -30,6 +31,6 @@ class Player():
 
     def draw(self,surface,camera_xy):
         camera_x, camera_y = camera_xy
-        # pygame.draw.rect(surface, (255, 0, 0),
-        #                  (self.rect.x - scroll[0], self.rect.y - scroll[1], self.rect.w, self.rect.h))
+        pygame.draw.rect(surface, (255, 0, 0),
+                         (self.rect.x - camera_x, self.rect.y - camera_y, self.rect.w, self.rect.h))
         surface.blit(pygame.transform.flip(self.image, not self.last_facing_direction, 0),(self.rect.x-self.rect_x_offset-camera_x,self.rect.y-self.rect_y_offset-camera_y))

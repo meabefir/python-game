@@ -131,18 +131,19 @@ while True:
     m_pos = pygame.mouse.get_pos()
     mx, my = (m_pos[0] / ratio + camera.x), (m_pos[1] / ratio + camera.y)
 
-    # SHADOW
-    over = pygame.Surface(window_size_small)
-    over.set_colorkey((255, 255, 255))
-    over.fill((0, 0, 0))
-
-    for light in light_sources:
-
-        light.flicker()
-        light.draw(over,camera)
-
     ################## DRAW PLAYER
     player.draw(display,camera.offset)
+
+    # SHADOW
+    shadow = pygame.Surface(window_size_small)
+    shadow.set_colorkey((255, 255, 255))
+    shadow.fill((0, 0, 0))
+
+    for light in light_sources:
+        light.flicker()
+        light.draw(shadow,camera)
+    # DRAW SHADOW OVER EVERYTHING ELSE
+    #display.blit(shadow, (0, 0))
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -176,8 +177,7 @@ while True:
         if event.type == pygame.KEYUP:
             input.update_released(event)
 
-    # DRAW SHADOW OVER EVERYTHING ELSE
-    display.blit(over, (0, 0))
+
 
     screen.blit(pygame.transform.scale(display, window_size), (0, 0))
     pygame.display.update()
