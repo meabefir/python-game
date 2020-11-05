@@ -1,6 +1,5 @@
 import pygame
 
-
 class Entity():
     def __init__(self, image, rect_x, rect_y, rect_x_offset, rect_y_offset, rect_w=0, rect_h=0):
         self.pickupable = False

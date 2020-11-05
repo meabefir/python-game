@@ -2,6 +2,8 @@ import pygame
 import random
 from helper import *
 
+light_sources = []
+
 class LightSource():
     def __init__(self, pos, target=None):
         if target is None:
