@@ -6,6 +6,8 @@ from lightSource import *
 from camera import *
 from entity import *
 from debug import *
+from mapRender import *
+from loader import *
 
 clock = pygame.time.Clock()
 pygame.init()
@@ -21,20 +23,6 @@ def set_display(ratio):
 
 
 display, window_size_small = set_display(ratio)
-
-
-def load_images(*args):
-    for path in args:
-        for f, sf, files in os.walk(path):
-            for file in files:
-                name = file.split('_')[0].split('.')[0]
-                file_path = f + '\\' + file
-                img = pygame.image.load(file_path)
-                if name in images:
-                    images[name].append(img)
-                else:
-                    images[name] = [img]
-
 
 ################################### WORLD GEN ##############################
 def get_perlin_height(x, y):
@@ -97,7 +85,7 @@ def generate_chunk(x, y):
 colors = {'aqua': (198, 252, 255)}
 
 heights = {'tile': 10, 'entity': 20}
-images = {}
+
 load_images('images/tiles', 'images/entities', 'images/player')
 
 ########################## RANDOM GENERATION
@@ -136,7 +124,7 @@ while True:
 
     # dinamically display tiles
     entities = []
-    entities_by_height = {}
+    #entities_by_height = {}
     for y in range(window_size_small[1] // (tile_size * chunk_size) + 3):
         for x in range(window_size_small[0] // (tile_size * chunk_size) + 3):
             chunk_x = x - 1 + int(round(camera.x / (chunk_size * tile_size)))
@@ -148,11 +136,11 @@ while True:
             for en in world_map[chunk]:
                 entities.append(en)
                 # create height map
-                type = en.type
-                if heights[type] not in entities_by_height:
-                    entities_by_height[heights[type]] = [en]
-                else:
-                    entities_by_height[heights[type]].append(en)
+                # type = en.type
+                # if heights[type] not in entities_by_height:
+                #     entities_by_height[heights[type]] = [en]
+                # else:
+                #     entities_by_height[heights[type]].append(en)
 
     for en in sorted(entities, key=lambda en: heights[en.type]):
         en.draw(display, camera.offset)
