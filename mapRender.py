@@ -2,20 +2,7 @@ import pygame,random,noise
 from debug import *
 from loader import *
 from entity import *
-
-entities = []
-world_map = {}
-
-seed = random.randint(0, 9999999)
-seed2 = random.randint(0, 9999999)
-scale = 50
-octaves = 50  # 1
-persistence = .5  # .5
-lacunarity = 2  # 2
-repeat = 999999999
-
-tile_size = 16
-chunk_size = 8
+from camera import *
 
 def get_perlin_height(x, y):
     height = abs(
@@ -41,7 +28,7 @@ def create_tile_at(x, y):
     elif 20 < height <= 45:
         img = 'grass'
         if random.randint(1, 50) == 1:
-            new_el = Entity(images['branch'][0], x * tile_size,
+            new_el = Entity(images['tri'][0], x * tile_size,
                             y * tile_size, 0, 0)
             new_el.set_pickupable()
             new_el.set_type('entity')
@@ -71,7 +58,7 @@ def generate_chunk(x, y):
                 chunk_elements += elements
     return chunk_elements
 
-def render_chunks(window_size_small,camera,display):
+def render_chunks(window_size_small,display):
     entities = []
     for y in range(window_size_small[1] // (tile_size * chunk_size) + 3):
         for x in range(window_size_small[0] // (tile_size * chunk_size) + 3):
@@ -84,9 +71,17 @@ def render_chunks(window_size_small,camera,display):
             for en in world_map[chunk]:
                 entities.append(en)
     return entities
-                # create height map
-                # type = en.type
-                # if heights[type] not in entities_by_height:
-                #     entities_by_height[heights[type]] = [en]
-                # else:
-                #     entities_by_height[heights[type]].append(en)
+
+entities = []
+world_map = {}
+
+seed = random.randint(0, 9999999)
+seed2 = random.randint(0, 9999999)
+scale = 50
+octaves = 50  # 1
+persistence = .5  # .5
+lacunarity = 2  # 2
+repeat = 999999999
+
+tile_size = 16
+chunk_size = 8

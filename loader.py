@@ -1,7 +1,5 @@
 import pygame,os
 
-images = {}
-
 def load_images(*args):
     for path in args:
         for f, sf, files in os.walk(path):
@@ -13,3 +11,6 @@ def load_images(*args):
                     images[name].append(img)
                 else:
                     images[name] = [img]
+
+images = {}
+load_images('images/tiles', 'images/entities', 'images/player')

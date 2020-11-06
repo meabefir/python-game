@@ -1,8 +1,11 @@
 import pygame
 import random
 from helper import *
+from camera import *
 
 light_sources = []
+
+from gameTime import *
 
 class LightSource():
     def __init__(self, pos, target=None):
@@ -14,6 +17,7 @@ class LightSource():
             self.y = target.y + target.h // 2
         self.target = target
         self.radius = 50
+        self.finnesse = 15
         self.max_radius = self.radius * 1.2
         self.min_radius = self.radius * 0.8
 
@@ -21,12 +25,16 @@ class LightSource():
         self.radius += random.randint(0, 2) - 1
         self.radius = clamp(self.radius, self.min_radius, self.max_radius)
 
-    def draw(self, surface,camera):
+    def draw(self, surface):
         if self.target is not None:
             self.x += (self.target.x + self.target.w // 2 - self.x) / 2
             self.y += (self.target.y + self.target.h // 2 - self.y) / 2
-            pygame.draw.circle(surface, (255, 255, 255), (int(self.x - camera.x), int(self.y - camera.y)),
-                               int(self.radius))
+            for i in reversed(range(self.finnesse)):
+                color = [(255-i*10-100)]*3
+                if game_time.gray_shade > color[0]: continue
+                pygame.draw.circle(surface, color, (int(self.x - camera.x), int(self.y - camera.y)),
+                                   int(self.radius-(self.finnesse-1-i)*2))
+
         else:
             pygame.draw.circle(surface, (255, 255, 255), (int(light.x - camera.x), int(light.y - camera.y)),
                                int(self.radius))

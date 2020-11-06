@@ -1,4 +1,5 @@
 import pygame
+from camera import *
 
 class Entity():
     def __init__(self, image, rect_x, rect_y, rect_x_offset, rect_y_offset, rect_w=0, rect_h=0):
@@ -24,11 +25,10 @@ class Entity():
     def set_pickupable(self):
         self.pickupable = True
 
-    def draw_rect(self, surface, camera):
+    def draw_rect(self, surface):
         pygame.draw.rect(surface, (255, 0, 0),
                          (self.rect.x - camera.x, self.rect.y - camera.y, self.rect.w, self.rect.h),1)
 
-    def draw(self, surface, camera_xy):
-        camera_x, camera_y = camera_xy
+    def draw(self, surface):
         surface.blit(self.image,
-                     (self.rect.x - self.rect_x_offset - camera_x, self.rect.y - self.rect_y_offset - camera_y))
+                     (self.rect.x - self.rect_x_offset - camera.x, self.rect.y - self.rect_y_offset - camera.y))

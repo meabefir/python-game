@@ -1,6 +1,9 @@
 import pygame,math
 from entity import *
 from helper import *
+from input import *
+from mouse import *
+from mapRender import *
 
 class Player(Entity):
     def __init__(self, x, y, image):
@@ -17,11 +20,11 @@ class Player(Entity):
         self.bob_speed = self.speed / 5
 
         self.inventory = []
-        self.pickup_range = 501
+        self.pickup_range = 50
         self.click_action = 'gather'
 
-    def update(self, key_held):
-        self.get_movement(key_held)
+    def update(self):
+        self.get_movement()
 
         # change facing direction
         if self.movement[0] != 0:
@@ -33,19 +36,20 @@ class Player(Entity):
 
         self.bob()
 
-    def simulate_click(self,mx,my,chunk_x,chunk_y,world_map):
+    def simulate_click(self):
+        chunk_x = int(mouse.x // (tile_size * chunk_size))
+        chunk_y = int(mouse.y // (tile_size * chunk_size))
         if self.click_action == 'gather':
             chunk = str(chunk_x)+';'+str(chunk_y)
-            print(chunk)
             for en in world_map[chunk]:
-                if en.pickupable and en.rect.collidepoint(mx,my) and math.dist((en.center_x,en.center_y),(self.center_x,self.center_y)) <= self.pickup_range:
+                if en.pickupable and en.rect.collidepoint(mouse.x,mouse.y) and math.dist((en.center_x,en.center_y),(self.center_x,self.center_y)) <= self.pickup_range:
                     self.inventory.append(en)
                     world_map[chunk].remove(en)
                     break
 
-    def get_movement(self, key_held):
+    def get_movement(self):
         self.movement = [0, 0]
-        for key, value in key_held.items():
+        for key, value in input.key_held.items():
             if value == True:
                 if key == 'w':
                     self.movement[1] -= self.speed
@@ -76,7 +80,7 @@ class Player(Entity):
                 self.z -= self.bob_speed
 
     def draw(self, surface, camera):
-        self.draw_rect(surface, camera)
+        self.draw_rect(surface)
         img = pygame.transform.flip(self.image, not self.last_facing_direction, 0)
         surface.blit(img,
                      (
