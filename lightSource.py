@@ -20,6 +20,7 @@ class LightSource():
         self.finnesse = 15
         self.max_radius = self.radius * 1.2
         self.min_radius = self.radius * 0.8
+        self.visibility = 100
 
     def flicker(self):
         self.radius += random.randint(0, 2) - 1
@@ -30,7 +31,7 @@ class LightSource():
             self.x += (self.target.x + self.target.w // 2 - self.x) / 2
             self.y += (self.target.y + self.target.h // 2 - self.y) / 2
             for i in reversed(range(self.finnesse)):
-                color = [(255-i*10-100)]*3
+                color = [(255-i*10-self.visibility)]*3
                 if game_time.gray_shade > color[0]: continue
                 pygame.draw.circle(surface, color, (int(self.x - camera.x), int(self.y - camera.y)),
                                    int(self.radius-(self.finnesse-1-i)*2))

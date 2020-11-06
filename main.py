@@ -20,8 +20,10 @@ colors = {'aqua': (198, 252, 255)}
 
 heights = {'tile': 10, 'entity': 20}
 
-player = Player(0, 0, images['player'][0])
+map_render.render_chunks(display.window_size_small, display.display)
+player.move_on_land()
 camera.set_target(player)
+
 
 light_sources.append(LightSource((0, 0), player.rect))
 ############################################################ GAME LOOP
@@ -35,15 +37,13 @@ while True:
     camera.update()
 
     ################################### RENDER MAP
-    entities = render_chunks(display.window_size_small, display.display)
 
-    for en in sorted(entities, key=lambda en: heights[en.type]):
-        en.draw(display.display)
-        if en.type != 'tile':
-            en.draw_rect(display.display)
+    map_render.draw_tiles(display.display)
+    map_render.entities.append(player)
+    map_render.draw_entities(display.display)
 
-    ################################### DRAW PLAYER
-    player.draw(display.display, camera)
+
+    map_render.render_chunks(display.window_size_small, display.display)
 
     ################################### GAME TIME
     game_time.update()

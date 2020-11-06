@@ -5,14 +5,14 @@ from lightSource import *
 
 class GameTime():
     def __init__(self):
-        self.time = 1200
+        self.time = 1990
         self.day_length = 2400
         self.sunset = 2000
         self.sunrise = 500
         self.gray_shade = 255
         self.min_gray_shade = 0
         self.max_grey_shade = 255
-        self.time_speed = .1
+        self.time_speed = 1
     def update(self):
         #print(self.time)
         self.increment_time()

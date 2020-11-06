@@ -3,10 +3,12 @@ from camera import *
 
 class Entity():
     def __init__(self, image, rect_x, rect_y, rect_x_offset, rect_y_offset, rect_w=0, rect_h=0):
-        self.pickupable = False
         self.init_entity(image, rect_x, rect_y, rect_x_offset, rect_y_offset, rect_w, rect_h)
 
     def init_entity(self, image, rect_x, rect_y, rect_x_offset, rect_y_offset, rect_w=0, rect_h=0):
+        self.pickupable = False
+        self.is_barrier = False
+        self.type = None
         self.image = image
         self.w = self.image.get_width()
         self.h = self.image.get_height()
@@ -24,6 +26,9 @@ class Entity():
 
     def set_pickupable(self):
         self.pickupable = True
+
+    def set_barrier(self):
+        self.is_barrier = True
 
     def draw_rect(self, surface):
         pygame.draw.rect(surface, (255, 0, 0),
