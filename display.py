@@ -1,13 +1,18 @@
 import pygame
 from helper import *
+pygame.init()
 
 class Display():
     def __init__(self):
-        self.ratio = 2
+        self.ratio = 4
+        self.window_size_small = (900,600)
         self.window_size = (900, 600)
-        self.max_zoom = 5
+        self.max_zoom = 8
         self.min_zoom = .1
-        self.screen = pygame.display.set_mode(self.window_size)
+        self.is_fullscreen = False
+        self.monitor_height =pygame.display.Info().current_h
+        self.monitor_size = [int(self.monitor_height*1.5),int(self.monitor_height)]
+        self.screen = pygame.display.set_mode(self.window_size,pygame.RESIZABLE)
         self.set_display(self.ratio)
 
     def set_display(self,ratio):
@@ -17,20 +22,16 @@ class Display():
     def set_ratio(self,new_ratio):
         self.ratio = clamp(new_ratio,self.min_zoom,self.max_zoom)
 
+    def toggle_fullscreen(self):
+        self.is_fullscreen = not self.is_fullscreen
+        if self.is_fullscreen:
+            self.window_size = self.monitor_size
+            self.screen = pygame.display.set_mode(self.window_size, pygame.FULLSCREEN)
+            self.set_display(self.ratio)
+        else:
+            self.window_size = self.window_size_small
+            self.screen = pygame.display.set_mode(self.window_size, pygame.RESIZABLE)
+            self.set_display(self.ratio)
+
+
 display = Display()
-#
-# def set_display(new_ratio):
-#     print(new_ratio)
-#     global ratio
-#     global display
-#     global window_size_small
-#     ratio = new_ratio
-#     window_size_small = (int(window_size[0] // ratio), int(window_size[1] // ratio))
-#     display = pygame.Surface(window_size_small)
-#
-# ratio = 2
-# window_size = (900, 600)
-# screen = pygame.display.set_mode(window_size)
-# display = None
-# window_size_small = None
-# set_display(2)

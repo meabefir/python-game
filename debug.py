@@ -4,6 +4,7 @@ pygame.init()
 class Debug():
     def __init__(self):
         self.font = pygame.font.SysFont('calibri',20)
+        self.active = False
     def draw_chunks(self,surface,x,y,tile_size,chunk_size,camera):
         x_start = x*tile_size*chunk_size-camera.x
         y_start = y*tile_size*chunk_size-camera.y

@@ -1,14 +1,93 @@
 entity_data = {
-    'tree':{
-        'size':[32,32],
-        'rect_size':[12,12],
-        'rect_offset':[10,20],
-        'world_offset':[-.5,-1.5]
+    'tree': {
+        'name': 'tree',
+        'size': [32, 32],
+        'rect_size': [12, 12],
+        'rect_offset': [10, 20],
+        'world_offset': [3,3],
+        'gather_time': {'god':.5,'axe': 1, 'hand': 2},
+        'yield': ['wood', (4, 8)],
+        'is_barrier': True,
+        'is_pickupable': True,
+        'height': 10,
+        'type': 'entity'
     },
-    'branch':{
-        'size':[16,16],
-        'rect_size':[10,10],
-        'rect_offset':[3,3],
-        'world_offset':[0,0]
+    'branch': {
+        'name': 'branch',
+        'size': [16, 16],
+        'rect_size': [10, 10],
+        'rect_offset': [3, 3],
+        'world_offset': [3, 3],
+        'gather_time': {'god':.5,'hand': 1},
+        'yield': ['branch', (1, 2)],
+        'is_barrier': False,
+        'is_pickupable': True,
+        'height': 0,
+        'type': 'entity'
+    },
+    'water': {
+        'name': 'water',
+        'size': [16, 16],
+        'rect_size': [16, 16],
+        'rect_offset': [0, 0],
+        'world_offset': [0, 0],
+        'gather_time': {},
+        'yield': [],
+        'is_barrier': True,
+        'is_pickupable': False,
+        'height': 0,
+        'type': 'tile'
+    },
+    'sand': {
+        'name': 'sand',
+        'size': [16, 16],
+        'rect_size': [16, 16],
+        'rect_offset': [2, 2],
+        'world_offset': [0, 0],
+        'gather_time': {'god':.5,'hand':2,'shovel':1},
+        'yield': ['sand', (1, 1)],
+        'is_barrier': False,
+        'is_pickupable': True,
+        'height': 10,
+        'type': 'tile'
+    },
+    'grass': {
+        'name': 'grass',
+        'size': [16, 16],
+        'rect_size': [16, 16],
+        'rect_offset': [2, 2],
+        'world_offset': [0, 0],
+        'gather_time': {'god':.5,'hand':2,'shovel':1},
+        'yield': ['grass', (1, 1)],
+        'is_barrier': False,
+        'is_pickupable': True,
+        'height': 20,
+        'type': 'tile'
+    },
+    'dirt': {
+        'name': 'dirt',
+        'size': [16, 16],
+        'rect_size': [16, 16],
+        'rect_offset': [2, 2],
+        'world_offset': [0, 0],
+        'gather_time': {'god':.5,'hand':2,'shovel':1},
+        'yield': ['dirt', (1, 1)],
+        'is_barrier': False,
+        'is_pickupable': True,
+        'height': 30,
+        'type': 'tile'
+    },
+    'stone': {
+        'name': 'stone',
+        'size': [16, 16],
+        'rect_size': [16, 16],
+        'rect_offset': [0,0],
+        'world_offset': [0, 0],
+        'gather_time': {'god':.5,'pickaxe':2},
+        'yield': ['stone', (1, 1)],
+        'is_barrier': False,
+        'is_pickupable': True,
+        'height': 25,
+        'type': 'tile'
     },
 }

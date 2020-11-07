@@ -1,6 +1,7 @@
 import pygame, sys, random, os, noise, math
 from helper import *
 from display import *
+from eventHandler import *
 from input import *
 from player import *
 from lightSource import *
@@ -11,6 +12,7 @@ from mapRender import *
 from loader import *
 from gameTime import *
 from mouse import *
+from particleSystem import *
 
 clock = pygame.time.Clock()
 pygame.init()
@@ -33,7 +35,7 @@ while True:
     ################################### MOUSE INPUT
     mouse.update()
 
-    player.update()
+    player.update(mouse)
     camera.update()
 
     ################################### RENDER MAP
@@ -41,34 +43,17 @@ while True:
     map_render.draw_tiles(display.display)
     map_render.entities.append(player)
     map_render.draw_entities(display.display)
-
+    map_render.draw_overlay(display.display)
 
     map_render.render_chunks(display.window_size_small, display.display)
+
+    particle_system.update()
 
     ################################### GAME TIME
     game_time.update()
 
     for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
-        if event.type == pygame.MOUSEBUTTONDOWN:  ########### CLICK
-            if event.button == 1:
-                player.simulate_click()
-            ############################## ZOOM
-            elif event.button == 5:
-                display.set_display(display.set_ratio(display.ratio-.2))
-            elif event.button == 4:
-                display.set_display(display.set_ratio(display.ratio+.2))
-            ################################ MOVEMENT INPUT
-        if event.type == pygame.KEYDOWN:
-            input.update_held(event)
-            ## ESCAPE
-            if event.key == pygame.K_ESCAPE:
-                pygame.quit()
-                sys.exit()
-        if event.type == pygame.KEYUP:
-            input.update_released(event)
+        event_handler.update(event)
 
     display.screen.blit(pygame.transform.scale(display.display, display.window_size), (0, 0))
     pygame.display.update()
