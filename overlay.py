@@ -1,7 +1,9 @@
-import pygame
+import pygame,time
 from images import *
 from mapRender import *
 from camera import *
+
+pygame.init()
 
 class ActionOverlay():
     def __init__(self,target,type,full):
@@ -22,3 +24,9 @@ class ActionOverlay():
         bar_width = int((self.current/self.full)*10)+1
         surface.blit(self.border_img,(self.rect.x-camera.x,self.rect.y-camera.y))
         surface.blit(pygame.transform.scale(self.bar_img,(bar_width,2)),(self.rect.x-camera.x+2,self.rect.y-camera.y+2))
+
+class InfoOverlay():
+    def __init__(self):
+        self.duration = 5
+        self.created_at = time.time()
+        self.font = pygame.font.SysFont('calibri',5)

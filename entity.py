@@ -24,22 +24,26 @@ class Entity():
         self.rect_x_offset = rect_x_offset
         self.rect_y_offset = rect_y_offset
 
-    def set_height(self,height):
+    def set_height(self, height):
         self.height = height
 
     def set_type(self, type):
         self.type = type
 
-    def set_pickupable(self,value):
+    def set_pickupable(self, value):
         self.pickupable = value
 
-    def set_barrier(self,value):
+    def set_barrier(self, value):
         self.is_barrier = value
 
     def draw_rect(self, surface):
         pygame.draw.rect(surface, (255, 0, 0),
                          (self.rect.x - camera.x, self.rect.y - camera.y, self.rect.w, self.rect.h), 1)
 
-    def draw(self, surface):
-        surface.blit(self.image,
-                     (self.rect.x - self.rect_x_offset - camera.x, self.rect.y - self.rect_y_offset - camera.y))
+    def draw(self, surface, camera_influence=True):
+        if camera_influence:
+            surface.blit(self.image,
+                         (self.rect.x - self.rect_x_offset - camera.x, self.rect.y - self.rect_y_offset - camera.y))
+        else:
+            surface.blit(self.image,
+                         (self.rect.x - self.rect_x_offset, self.rect.y - self.rect_y_offset))

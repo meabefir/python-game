@@ -11,12 +11,14 @@ class Display():
         self.min_zoom = .1
         self.is_fullscreen = False
         self.monitor_height =pygame.display.Info().current_h
+        self.monitor_width =pygame.display.Info().current_w
         self.monitor_size = [int(self.monitor_height*1.5),int(self.monitor_height)]
         self.screen = pygame.display.set_mode(self.window_size,pygame.RESIZABLE)
         self.set_display(self.ratio)
 
     def set_display(self,ratio):
         self.window_size_small = (int(self.window_size[0] // self.ratio), int(self.window_size[1] // self.ratio))
+        print(self.window_size,self.window_size_small)
         self.display = pygame.Surface(self.window_size_small)
 
     def set_ratio(self,new_ratio):

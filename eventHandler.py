@@ -35,7 +35,5 @@ class EventHandler():
                 display.toggle_fullscreen()
         if event.type == pygame.KEYUP:
             input.update_released(event)
-        # if event.type == pygame.VIDEORESIZE:
-        #     display.resize_display(event)
 
 event_handler = EventHandler()

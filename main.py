@@ -45,6 +45,8 @@ while True:
     map_render.draw_entities(display.display)
     map_render.draw_overlay(display.display)
 
+    player.update_highlight()
+
     map_render.render_chunks(display.window_size_small, display.display)
 
     particle_system.update()
@@ -52,8 +54,12 @@ while True:
     ################################### GAME TIME
     game_time.update()
 
+    player.inventory.draw()
+
+    input.update()
     for event in pygame.event.get():
         event_handler.update(event)
+
 
     display.screen.blit(pygame.transform.scale(display.display, display.window_size), (0, 0))
     pygame.display.update()
