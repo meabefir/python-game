@@ -7,6 +7,32 @@ from camera import *
 from loader import *
 from data import *
 from overlay import *
+from text import *
+
+font = pygame.font.SysFont('calibri',8)
+
+class InvTile():
+    def __init__(self,inv,row,col):
+        self.inventory = inv
+        self.row = row
+        self.col = col
+        self.item = None
+        self.item_count = 0
+
+    def set_item(self,item,item_count,image):
+        self.item = item
+        self.item_count = item_count
+        self.img = image
+        self.item_count_render_black = font.render(str(self.item_count),False,(0,0,0))
+        self.item_count_render_white = font.render(str(self.item_count),False,(255,255,255))
+
+    def draw(self):
+        x = self.inventory.inventory_en.rect.x+5+(self.col-1)*16
+        y = self.inventory.inventory_en.rect.y+5+(5-self.row)*16
+        display.display.blit(self.img,(x,y))
+        #display.display.blit(self.item_count_render_black,(x+16-4*len(str(self.item_count))+1,y+8+1))
+        #display.display.blit(self.item_count_render_white,(x+16-4*len(str(self.item_count)),y+8))
+        text.draw_number(self.item_count,x+16-4*len(str(self.item_count)),y+8)
 
 
 class Inventory():
@@ -18,7 +44,12 @@ class Inventory():
         self.en = None
         self.pickup_overlay = None
         self.state = 'hotbar'
+        self.rows = 5
+        self.cols = 10
 
+        for row in range(self.rows):
+            for col in range(self.cols):
+                self.items.append(InvTile(self,row+1,col+1))
         self.set_inv_en()
 
     def set_inv_en(self):
@@ -31,7 +62,11 @@ class Inventory():
 
     def add_item(self, en_data):
         items_to_add = (en_data['yield'][0], random.randint(en_data['yield'][1][0], en_data['yield'][1][1]))
-        self.items.append(items_to_add)
+        for item in self.items:
+            if item.item is None:
+                item.set_item(items_to_add[0],items_to_add[1],images[f'{items_to_add[0]}-item'][0])
+                break
+
 
     def init_pickup(self, en, chunk):
         if self.equiped not in entity_data[en.name]['gather_time']: return
@@ -85,6 +120,7 @@ class Inventory():
             self.toggle_inventory()
 
     def toggle_inventory(self):
+        #print('from aplyer',display.window_size, display.window_size_small)
         if self.state == 'inventory':
             self.state = 'hotbar'
             player.click_action = 'gather'
@@ -93,10 +129,16 @@ class Inventory():
             player.click_action = 'inventory'
 
     def draw(self):
+        # draw the ui of the hotbar and inventory
         if self.state == 'hotbar':
             self.hotbar_en.draw(display.display,False)
         else:
             self.inventory_en.draw(display.display,False)
+        # draw the items in the inventory
+        for item in self.items:
+            if item.row > 1 and self.state == 'hotbar': break
+            if item.item != None:
+                item.draw()
 
 
 class Player(Entity):
@@ -108,9 +150,16 @@ class Player(Entity):
         self.center_x = self.rect.x + self.rect.w // 2
         self.center_y = self.rect.y + self.rect.h // 2
         self.movement = [0, 0]
+
+        self.max_stamina = 50
+        self.stamina = self.max_stamina
+        self.stamina_drain = .5
+        self.stamina_regen = .05
+
         self.default_speed = 1
         self.base_speed = self.default_speed
         self.speed = self.default_speed
+
         self.last_facing_direction = 0
         self.collission_types = {'top': False, 'left': False, 'bottom': False, 'right': False}
         self.inventory = Inventory()
@@ -209,24 +258,6 @@ class Player(Entity):
                     self.rect.y = tile.rect.y
                     return
 
-    def simulate_click(self):
-        return
-
-    # if self.action == 'in_progress': return
-    # chunk_xx = int(self.mouse.x // (map_render.tile_size * map_render.chunk_size))
-    # chunk_yy = int(self.mouse.y // (map_render.tile_size * map_render.chunk_size))
-    # dx = [-1, 0, 1]
-    # dy = [-1, 0, 1]
-    # if self.click_action == 'gather':
-    #     for chunk_x in dx:
-    #         for chunk_y in dy:
-    #             chunk = str(chunk_x + chunk_xx) + ';' + str(chunk_y + chunk_yy)
-    #             if chunk in map_render.world_map:
-    #                 for en in map_render.world_map[chunk]:
-    #                     if en.pickupable and self.in_range_and_mouseover(en):
-    #                         self.inventory.init_pickup(en, chunk)
-    #                         return
-
     def in_range_and_mouseover(self, en):
         return en.rect.collidepoint(self.mouse.x, self.mouse.y) and math.dist((en.center_x, en.center_y), (
             self.center_x, self.center_y)) <= self.pickup_range
@@ -234,6 +265,7 @@ class Player(Entity):
     def get_movement(self):
         self.movement = [0, 0]
         for key, value in input.key_held.items():
+            # IF KEYS HELD
             if value == True:
                 if key == 'w':
                     self.movement[1] -= self.speed
@@ -244,9 +276,16 @@ class Player(Entity):
                 elif key == 'd':
                     self.movement[0] += self.speed
                 elif key == 'shift':
-                    self.speed = self.base_speed * 2
+                    if self.movement[0] != 0 or self.movement[1] != 0:
+                        self.stamina = clamp(self.stamina-self.stamina_drain,0,self.max_stamina)
+                    if self.stamina > 0:
+                        self.speed = self.base_speed * 2
+                    else:
+                        self.speed = self.base_speed
             else:
+                # IF KEYS NOT HELD
                 if key == 'shift':
+                    self.stamina = clamp(self.stamina + self.stamina_regen, 0, self.max_stamina)
                     self.speed = self.base_speed
 
     def bob(self):
@@ -262,6 +301,14 @@ class Player(Entity):
         else:
             if self.z > 0:
                 self.z -= self.bob_speed
+
+    def ui_draw(self):
+        self.inventory.draw()
+        self.draw_stamina()
+
+    def draw_stamina(self):
+        display.display.blit(images['stamina-border'][0],(2,2))
+        display.display.blit(pygame.transform.scale(images['stamina-bar'][0],(int(self.stamina),4)),(4,4))
 
     def draw(self, surface):
         # self.draw_rect(surface)

@@ -30,7 +30,7 @@ camera.set_target(player)
 light_sources.append(LightSource((0, 0), player.rect))
 ############################################################ GAME LOOP
 while True:
-    display.display.fill(colors['aqua'])
+    #display.display.fill(colors['aqua'])
 
     ################################### MOUSE INPUT
     mouse.update()
@@ -54,7 +54,7 @@ while True:
     ################################### GAME TIME
     game_time.update()
 
-    player.inventory.draw()
+    player.ui_draw()
 
     input.update()
     for event in pygame.event.get():

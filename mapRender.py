@@ -6,6 +6,7 @@ from camera import *
 from data import *
 from particleSystem import *
 
+
 class MapRender():
     def __init__(self):
         self.entities = []
@@ -25,7 +26,6 @@ class MapRender():
 
         self.tile_size = 16
         self.chunk_size = 8
-        #self.tile_height = {'water':0,'sand':10,'grass':20,'dirt':30,'stone':40,'coal':50,'iron':60}
 
     def get_perlin_height(self, x, y):
         height = abs(
@@ -41,9 +41,9 @@ class MapRender():
         rect_offset = data['rect_offset']
         world_offset = data['world_offset']
         new_el = Entity(name, random.choice(images[name]),
-                      x * self.tile_size + world_offset[0],
-                      y * self.tile_size + world_offset[1],
-                        rect_offset[0],rect_offset[1], rect_size[0],rect_size[1])
+                        x * self.tile_size + random.randint(0, world_offset[0]),
+                        y * self.tile_size + random.randint(0, world_offset[1]),
+                        rect_offset[0], rect_offset[1], rect_size[0], rect_size[1])
         new_el.set_barrier(data['is_barrier'])
         new_el.set_pickupable(data['is_pickupable'])
         new_el.set_height(data['height'])
@@ -65,6 +65,8 @@ class MapRender():
             #     img = 'coal'
         elif 48 < height <= 66:
             img = 'dirt'
+            if random.randint(1, 15) == 1:
+                elements.append(self.entity_from_data(f'rock-{random.randint(1, 2)}', x, y))
         elif 22 < height <= 48:
             img = 'grass'
             if random.randint(1, 15) == 1:
@@ -76,7 +78,7 @@ class MapRender():
         else:
             img = 'water'
 
-        elements.append(self.entity_from_data(img,x,y))
+        elements.append(self.entity_from_data(img, x, y))
         return elements
 
     def generate_chunk(self, x, y):
@@ -115,12 +117,13 @@ class MapRender():
         return self.entities
 
     def draw_tiles(self, surface):
-        for tile in sorted(self.tiles,key=lambda tile:tile.height):
+        for tile in sorted(self.tiles, key=lambda tile: tile.height):
             tile.draw(surface)
             # water particles
             if tile.name == 'water':
-                if random.randint(1,5000) == 1:
-                    particle_system.add_particle(tile.rect.x+random.randint(0,self.tile_size),tile.rect.y+random.randint(0,self.tile_size))
+                if random.randint(1, 5000) == 1:
+                    particle_system.add_particle(tile.rect.x + random.randint(0, self.tile_size),
+                                                 tile.rect.y + random.randint(0, self.tile_size))
             if debug.active:
                 tile.draw_rect(display.display)
 
@@ -130,8 +133,9 @@ class MapRender():
             if debug.active:
                 en.draw_rect(display.display)
 
-    def draw_overlay(self,surface):
+    def draw_overlay(self, surface):
         for ol in self.overlay:
             ol.draw(surface)
+
 
 map_render = MapRender()
