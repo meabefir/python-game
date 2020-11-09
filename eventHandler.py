@@ -16,14 +16,17 @@ class EventHandler():
                 mouse.set_held()
             ############################## ZOOM
             elif event.button == 5:
-                display.set_display(display.set_ratio(display.ratio-.2))
+                player.inventory.scroll_crafting_tiles(player.inventory.crafting_scroll_ammount)
+                #display.set_display(display.set_ratio(display.ratio-.2))
             elif event.button == 4:
-                display.set_display(display.set_ratio(display.ratio+.2))
+                player.inventory.scroll_crafting_tiles(-player.inventory.crafting_scroll_ammount)
+                #display.set_display(display.set_ratio(display.ratio+.2))
         if event.type == pygame.MOUSEBUTTONUP:
             if event.button == 1:
                 mouse.set_up()
             ################################ KEY PRESSED
         if event.type == pygame.KEYDOWN:
+            #print(event.key)
             input.update_held(event)
             ## ESCAPE
             if event.key == pygame.K_ESCAPE:

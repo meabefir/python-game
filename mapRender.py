@@ -65,13 +65,13 @@ class MapRender():
             #     img = 'coal'
         elif 48 < height <= 66:
             img = 'dirt'
-            if random.randint(1, 15) == 1:
-                elements.append(self.entity_from_data(f'rock-{random.randint(1, 2)}', x, y))
+            if random.randint(1, 2) == 1:
+                elements.append(self.entity_from_data(f'rock-{random.randint(1, 3)}', x, y))
         elif 22 < height <= 48:
             img = 'grass'
             if random.randint(1, 15) == 1:
                 elements.append(self.entity_from_data('tree', x, y))
-            elif random.randint(1, 25) == 1:
+            elif random.randint(1, 3) == 1:
                 elements.append(self.entity_from_data('branch', x, y))
         elif 15 <= height <= 22:
             img = 'sand'

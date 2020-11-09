@@ -24,7 +24,6 @@ class GameTime():
 
         if self.time >= self.sunset or self.time <= self.sunrise+self.max_grey_shade/self.time_speed:
             for light in light_sources:
-                #light.flicker()
                 light.draw(black)
 
         display.display.blit(black, (0, 0), special_flags=pygame.BLEND_RGB_MULT)

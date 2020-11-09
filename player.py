@@ -8,37 +8,85 @@ from loader import *
 from data import *
 from overlay import *
 from text import *
+from mouse import *
 
-font = pygame.font.SysFont('calibri',8)
+
+class Tile():
+    def __init__(self, x, y, name, count):
+        self.count = count
+        self.en = Entity(name, images[f'{name}-item'][0], x, y, 0, 0)
+
+    def draw(self):
+        self.en.draw(display.display, False)
+        text.draw_number(self.count, self.en.rect.x, self.en.rect.y)
+
+
+class CraftingTile():
+    def __init__(self, name, x, y):
+        self.name = name
+        self.en = Entity(name, images['crafting-window'][0], x, y, 0, 0)
+        self.tiles = []
+        self.tiles.append(Tile(self.en.rect.x + 2, self.en.rect.y + 2, name, 1))
+        for i in range(len(crafting[name])):
+            # name = crafting[name][i][0]
+            # count = crafting[name][i][1]
+            name2, count = crafting[name][i]
+            self.tiles.append(Tile(self.en.rect.x + 19 + i * 16, self.en.rect.y + 2, name2, count))
+
+    def scroll(self, ammount):
+        for tile in self.tiles:
+            tile.en.rect.y += ammount
+        self.en.rect.y += ammount
+
+    def draw(self):
+        self.en.draw(display.display, False)
+        for tile in self.tiles:
+            tile.draw()
+
 
 class InvTile():
-    def __init__(self,inv,row,col):
+    def __init__(self, inv, row, col):
         self.inventory = inv
         self.row = row
         self.col = col
         self.item = None
+        self.img = images['none-img'][0]
         self.item_count = 0
+        self.en = Entity(None, self.img, self.inventory.inventory_en.rect.x + 5 + (self.col - 1) * 16,
+                         self.inventory.inventory_en.rect.y + 5 + (5 - self.row) * 16, 0, 0, 16, 16)
 
-    def set_item(self,item,item_count,image):
+    def set_item(self, item, item_count, image):
         self.item = item
         self.item_count = item_count
         self.img = image
-        self.item_count_render_black = font.render(str(self.item_count),False,(0,0,0))
-        self.item_count_render_white = font.render(str(self.item_count),False,(255,255,255))
+        self.en = Entity(item, image, self.inventory.inventory_en.rect.x + 5 + (self.col - 1) * 16,
+                         self.inventory.inventory_en.rect.y + 5 + (5 - self.row) * 16, 0, 0, 16, 16)
+
+    def update_item(self, item, item_count, image):
+        self.item = item
+        self.item_count = item_count
+        self.img = image
+
+    def increase_count(self, item_count):
+        self.item_count += item_count
 
     def draw(self):
-        x = self.inventory.inventory_en.rect.x+5+(self.col-1)*16
-        y = self.inventory.inventory_en.rect.y+5+(5-self.row)*16
-        display.display.blit(self.img,(x,y))
-        #display.display.blit(self.item_count_render_black,(x+16-4*len(str(self.item_count))+1,y+8+1))
-        #display.display.blit(self.item_count_render_white,(x+16-4*len(str(self.item_count)),y+8))
-        text.draw_number(self.item_count,x+16-4*len(str(self.item_count)),y+8)
+        self.en = Entity(self.item, self.img, self.inventory.inventory_en.rect.x + 5 + (self.col - 1) * 16,
+                         self.inventory.inventory_en.rect.y + 5 + (5 - self.row) * 16, 0, 0, 16, 16)
+        if self.item is not None:
+            self.en.draw(display.display, False)
+
+            text.draw_number(self.item_count, self.en.rect.x + 16 - 4 * len(str(self.item_count)), self.en.rect.y + 8)
 
 
 class Inventory():
     def __init__(self):
-        self.items = []
-        self.equiped = 'god'
+        self.items_tiles = []
+        self.items = {}
+        self.crafting_tiles = []
+        self.default_tool = 'god'
+        self.equiped = self.default_tool
+        self.equiped_tile = None
         self.pickup_start = None
         self.action = None
         self.en = None
@@ -46,11 +94,15 @@ class Inventory():
         self.state = 'hotbar'
         self.rows = 5
         self.cols = 10
+        self.crafting_scroll_ammount = 8
+        self.crafting_current_scroll = 0
 
+        self.picked_inv_tile = None
+
+        self.set_inv_en()
         for row in range(self.rows):
             for col in range(self.cols):
-                self.items.append(InvTile(self,row+1,col+1))
-        self.set_inv_en()
+                self.items_tiles.append(InvTile(self, row + 1, col + 1))
 
     def set_inv_en(self):
         self.hotbar_en = Entity('hotbar', images['hotbar'][0],
@@ -60,13 +112,85 @@ class Inventory():
                                    display.window_size_small[0] / 2 - images['inventory'][0].get_width() / 2,
                                    display.window_size_small[1] - images['inventory'][0].get_height(), 0, 0)
 
-    def add_item(self, en_data):
-        items_to_add = (en_data['yield'][0], random.randint(en_data['yield'][1][0], en_data['yield'][1][1]))
-        for item in self.items:
-            if item.item is None:
-                item.set_item(items_to_add[0],items_to_add[1],images[f'{items_to_add[0]}-item'][0])
-                break
+    def scroll_crafting_tiles(self, ammount):
+        self.crafting_current_scroll += ammount
+        for crafting_tile in self.crafting_tiles:
+            crafting_tile.scroll(ammount)
 
+    def add_item(self, item_to_add, item_count):
+        item_image = images[f'{item_to_add}-item'][0]
+        for item in self.items_tiles:
+            # stacking items over other items
+            if item.item == item_to_add:
+                to_add_now = min(stack_size[item_to_add] - item.item_count, item_count)
+                item.increase_count(to_add_now)
+                item_count -= to_add_now
+                try:
+                    self.items[item_to_add] += to_add_now
+                except:
+                    self.items[item_to_add] = to_add_now
+                finally:
+                    self.create_crafting_tiles()
+                if item_count == 0:
+                    break
+            # if were still left with items but no more stacking
+        if item_count > 0:
+            for item in self.items_tiles:
+                if item.item is None:
+                    to_add_now = min(stack_size[item_to_add], item_count)
+                    item_count -= to_add_now
+                    try:
+                        self.items[item_to_add] += to_add_now
+                    except:
+                        self.items[item_to_add] = to_add_now
+                    finally:
+                        self.create_crafting_tiles()
+                    item.set_item(item_to_add, to_add_now, item_image)
+                    if item_count == 0:
+                        break
+        print(self.items)
+
+    def add_item_from_data(self, en_data):
+        for i in range(len(en_data['yield'])):
+            # print(en_data['yield'][i])
+            chance = en_data['yield'][i][2]
+            if random.random() * 100 <= chance:
+                item_to_add = en_data['yield'][i][0]
+                item_count = random.randint(en_data['yield'][i][1][0], en_data['yield'][i][1][1])
+                self.add_item(item_to_add, item_count)
+                # if low change was hit, only yield items from that loot table
+                break
+        # print(self.items)
+
+    def delete_item(self, item, count):
+        for inv_tile in self.items_tiles:
+            if count == 0:
+                return
+            if inv_tile.item == item:
+                to_remove = min(inv_tile.item_count, count)
+                inv_tile.item_count -= to_remove
+                count -= to_remove
+                self.items[item] -= to_remove
+                if inv_tile.item_count == 0:
+                    inv_tile.update_item(None, 0, images['none-img'][0])
+
+    def craft(self, name):
+        for item, count in crafting[name]:
+            self.delete_item(item, count)
+        self.add_item(name, 1)
+        self.create_crafting_tiles()
+
+    def create_crafting_tiles(self):
+        self.crafting_tiles = []
+        for item, recipe in crafting.items():
+            for ingredient in recipe:
+                name, count = ingredient
+                if name not in self.items or self.items[name] < count:
+                    break
+            else:
+                self.crafting_tiles.append(
+                    CraftingTile(item, display.window_size_small[0] - 72,
+                                 self.crafting_current_scroll + 2 + len(self.crafting_tiles) * 20))
 
     def init_pickup(self, en, chunk):
         if self.equiped not in entity_data[en.name]['gather_time']: return
@@ -86,7 +210,7 @@ class Inventory():
             # if mined for long enough
             if delta_time >= self.en_data['gather_time'][self.equiped]:
                 # add to inv
-                self.add_item(self.en_data)
+                self.add_item_from_data(self.en_data)
                 # remove it from the world map
                 map_render.world_map[self.en_chunk].remove(self.en)
                 # replace it with water if is tile type
@@ -109,43 +233,107 @@ class Inventory():
         self.pickup_start = None
         player.action = None
 
+    def mouse_over_inv_tile(self):
+        for inv_tile in self.items_tiles:
+            if inv_tile.en.rect.collidepoint((mouse.window_x, mouse.window_y)):
+                if inv_tile.item is not None or self.picked_inv_tile is not None:
+                    return inv_tile
+        return None
+
+    def set_equiped(self):
+        for i in range(10):
+            if input.key_clicked[str(i)]:
+                if i > 0:
+                    i -= 1
+                else:
+                    i = 9
+                self.equiped = self.items_tiles[i].item if self.items_tiles[i].item is not None else self.default_tool
+                self.equiped_tile = self.items_tiles[i] if self.items_tiles[i].item is not None else None
+        if input.key_clicked['q']:
+            self.equiped = self.default_tool
+            self.equiped_tile = None
+
+    def check_crafting(self):
+        for crafting_tile in self.crafting_tiles:
+            if crafting_tile.en.rect.collidepoint(mouse.window_x, mouse.window_y):
+                self.craft(crafting_tile.name)
+                break
+
     def update(self):
-        #print(display.window_size_small)
         self.set_inv_en()
+        self.set_equiped()
+        # print(self.equiped)
 
         if self.action == 'pickup':
             self.iterate_pickup()
 
+        # toggle inventory
         if input.key_clicked['tab']:
             self.toggle_inventory()
 
+        # craft items if inventory open
+        if self.state == 'inventory' and mouse.clicked:
+            self.check_crafting()
+
+        # pick inventory tile
+        if mouse.clicked and self.state == 'inventory':
+            over = self.mouse_over_inv_tile()
+            if over is not None:
+                # print(over.row,over.col)
+                if self.picked_inv_tile is None:
+                    self.picked_inv_tile = over
+                else:
+                    self.change_inv_tiles(self.picked_inv_tile, over)
+
+    def change_inv_tiles(self, tile1, tile2):
+        if tile1 == self.equiped_tile or tile2 == self.equiped_tile:
+            self.equiped_tile = None
+            self.equiped = self.default_tool
+        self.picked_inv_tile = None
+        tile2_item, tile2_item_count, tile2_image = tile2.item, tile2.item_count, tile2.img
+
+        tile2.update_item(tile1.item, tile1.item_count, tile1.img)
+        tile1.update_item(tile2_item, tile2_item_count, tile2_image)
+
     def toggle_inventory(self):
-        #print('from aplyer',display.window_size, display.window_size_small)
+        # print('from aplyer',display.window_size, display.window_size_small)
         if self.state == 'inventory':
             self.state = 'hotbar'
             player.click_action = 'gather'
+            self.picked_inv_tile = None
+            self.crafting_current_scroll = 0
         else:
+            self.create_crafting_tiles()
             self.state = 'inventory'
             player.click_action = 'inventory'
 
     def draw(self):
         # draw the ui of the hotbar and inventory
         if self.state == 'hotbar':
-            self.hotbar_en.draw(display.display,False)
-        else:
-            self.inventory_en.draw(display.display,False)
+            self.hotbar_en.draw(display.display, False)
+        else:  # draw inventory and craftables
+            self.inventory_en.draw(display.display, False)
+            for crafting_tile in self.crafting_tiles:
+                crafting_tile.draw()
+
         # draw the items in the inventory
-        for item in self.items:
+        for item in self.items_tiles:
             if item.row > 1 and self.state == 'hotbar': break
-            if item.item != None:
-                item.draw()
+            item.draw()
+            if self.picked_inv_tile == item:  ######### highlight selected item
+                pygame.draw.rect(display.display, colors['purple'],
+                                 (item.en.rect.x, item.en.rect.y, 16, 16), 1)
+        # draw highlight for held item
+        if self.equiped_tile is not None:
+            pygame.draw.rect(display.display, colors['purple'],
+                             (self.equiped_tile.en.rect.x, self.equiped_tile.en.rect.y, 16, 16), 1)
 
 
 class Player(Entity):
     def __init__(self, x, y, image):
         self.rect_x_offset = 2
-        self.rect_y_offset = 6
-        self.init_entity('player', image, x, y, self.rect_x_offset, self.rect_y_offset, 10, 10)
+        self.rect_y_offset = 10
+        self.init_entity('player', image, x, y, self.rect_x_offset, self.rect_y_offset, 10, 4)
         self.height = 10
         self.center_x = self.rect.x + self.rect.w // 2
         self.center_y = self.rect.y + self.rect.h // 2
@@ -207,7 +395,8 @@ class Player(Entity):
                     if chunk in map_render.world_map:
                         for en in map_render.world_map[chunk]:
                             if en.pickupable and self.in_range_and_mouseover(en):
-                                pygame.draw.rect(display.display, (255, 0, 0),
+                                if self.inventory.equiped not in entity_data[en.name]['gather_time']: break
+                                pygame.draw.rect(display.display, colors['purple'],
                                                  (en.rect.x - camera.x, en.rect.y - camera.y, en.rect.w, en.rect.h), 1)
                                 if self.mouse.held and self.inventory.en != en:
                                     self.inventory.reset_pickup()
@@ -277,7 +466,7 @@ class Player(Entity):
                     self.movement[0] += self.speed
                 elif key == 'shift':
                     if self.movement[0] != 0 or self.movement[1] != 0:
-                        self.stamina = clamp(self.stamina-self.stamina_drain,0,self.max_stamina)
+                        self.stamina = clamp(self.stamina - self.stamina_drain, 0, self.max_stamina)
                     if self.stamina > 0:
                         self.speed = self.base_speed * 2
                     else:
@@ -307,8 +496,9 @@ class Player(Entity):
         self.draw_stamina()
 
     def draw_stamina(self):
-        display.display.blit(images['stamina-border'][0],(2,2))
-        display.display.blit(pygame.transform.scale(images['stamina-bar'][0],(int(self.stamina),4)),(4,4))
+        display.display.blit(images['stamina-border-background'][0], (2, 2))
+        display.display.blit(pygame.transform.scale(images['stamina-bar'][0], (int(self.stamina), 4)), (4, 4))
+        display.display.blit(images['stamina-border'][0], (2, 2))
 
     def draw(self, surface):
         # self.draw_rect(surface)

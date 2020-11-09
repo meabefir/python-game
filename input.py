@@ -2,7 +2,7 @@ import time
 
 class Input():
     def __init__(self):
-        self.key_code = {119:'w',97:'a',115:'s',100:'d',304:'shift',32:'space',9:'tab'}
+        self.key_code = {48:'0',49:'1',50:'2',51:'3',52:'4',53:'5',54:'6',55:'7',56:'8',57:'9',113:'q',119:'w',97:'a',115:'s',100:'d',304:'shift',32:'space',9:'tab'}
         self.key_held = {}
         self.key_clicked = {}
         self.active = {}

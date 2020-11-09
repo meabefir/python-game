@@ -3,7 +3,6 @@ from helper import *
 
 pygame.init()
 
-
 class Display():
     def __init__(self):
         self.monitor_height = pygame.display.Info().current_h
@@ -18,7 +17,7 @@ class Display():
         self.window_size = self.window_size_default
         self.max_zoom = 8
         self.min_zoom = .1
-        self.is_fullscreen = not False
+        self.is_fullscreen = not True
 
         self.toggle_fullscreen()
         # if self.is_fullscreen:
