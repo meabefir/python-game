@@ -1,8 +1,6 @@
-import pygame
+import pygame,math
 from camera import *
 from display import *
-from player import *
-
 
 class Mouse():
     def __init__(self):
@@ -27,6 +25,9 @@ class Mouse():
 
     def set_up(self):
         self.held = False
+
+    def distance_from_player(self,player):
+        return math.dist((self.x,self.y),(player.center_x,player.center_y))
 
 
 mouse = Mouse()

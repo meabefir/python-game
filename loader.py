@@ -13,4 +13,4 @@ def load_images(*args):
                     images[name] = [img]
 
 images = {}
-load_images('images/tiles', 'images/entities', 'images/player','images/overlay','images/pickups','images/digits')
+load_images('images/tiles', 'images/entities', 'images/player','images/overlay','images/items','images/digits')

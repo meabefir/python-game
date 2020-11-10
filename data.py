@@ -2,19 +2,43 @@ stack_size = {
     'wood': 99,
     'rock': 99,
     'branch': 99,
-    'campfire':10
+    'campfire': 101,
+    'pickaxe':1
+}
+
+action = {
+    'god': 'gather',
+    'hand': 'gather',
+    'wood': None,
+    'rock': None,
+    'branch': None,
+    'campfire': 'place',
+    'pickaxe': 'gather'
 }
 
 colors = {
-    'purple':(142,32,167)
+    'purple': (142, 32, 167)
 }
 
 crafting = {
     'campfire': [('wood', 5), ('branch', 10)],
-    'rock': [('wood', 1), ('branch', 2)]
+    'pickaxe': [('wood', 3), ('rock', 5)]
 }
 
 entity_data = {
+    'pickaxe': {
+        'name': 'pickaxe',
+        'size': [16, 16],
+        'rect_size': [16, 16],
+        'rect_offset': [0, 0],
+        'world_offset': [0, 0],
+        'gather_time': {'god': .1, 'hand': 1},
+        'yield': [('pickaxe', (1, 1), 100)],
+        'is_barrier': False,
+        'is_pickupable': True,
+        'height': 0,
+        'type': 'entity'
+    },
     'campfire': {
         'name': 'campfire',
         'size': [16, 16],
@@ -25,6 +49,7 @@ entity_data = {
         'yield': [('campfire', (1, 1), 100)],
         'is_barrier': True,
         'is_pickupable': True,
+        'is_light_source': True,
         'height': 10,
         'type': 'entity'
     },

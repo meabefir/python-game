@@ -29,8 +29,8 @@ class LightSource():
             self.radius = clamp(self.radius, self.min_radius, self.max_radius)
 
         if self.target is not None:
-            self.x += (self.target.x + self.target.w // 2 - self.x) / 2
-            self.y += (self.target.y + self.target.h // 2 - self.y) / 2
+            self.x += (self.target.x + self.target.w // 2 - self.x) / 1
+            self.y += (self.target.y + self.target.h // 2 - self.y) / 1
             for i in reversed(range(self.finnesse)):
                 color = [(255-i*10-self.visibility)]*3
                 if game_time.gray_shade > color[0]: continue

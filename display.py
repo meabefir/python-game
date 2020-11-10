@@ -17,14 +17,9 @@ class Display():
         self.window_size = self.window_size_default
         self.max_zoom = 8
         self.min_zoom = .1
-        self.is_fullscreen = not True
+        self.is_fullscreen = not False
 
         self.toggle_fullscreen()
-        # if self.is_fullscreen:
-        #     self.screen = pygame.display.set_mode(self.monitor_width)
-        # else:
-        #     self.screen = pygame.display.set_mode(self.window_size)
-        # self.set_display(self.ratio)
 
     def set_display(self, ratio):
         self.window_size_small = (int(self.window_size[0] // self.ratio), int(self.window_size[1] // self.ratio))

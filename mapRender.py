@@ -5,7 +5,7 @@ from entity import *
 from camera import *
 from data import *
 from particleSystem import *
-
+from mouse import *
 
 class MapRender():
     def __init__(self):
@@ -26,6 +26,19 @@ class MapRender():
 
         self.tile_size = 16
         self.chunk_size = 8
+
+    def collided_with(self,en_to_check,entities):
+        collide = []
+        for en in entities:
+            if en_to_check.rect.colliderect(en.rect):
+                collide.append(en)
+        return collide
+
+    def mouse_over_entity(self):
+        for en in self.entities:
+            if en.rect.collidepoint(mouse.x,mouse.y):
+                return True
+        return False
 
     def get_perlin_height(self, x, y):
         height = abs(

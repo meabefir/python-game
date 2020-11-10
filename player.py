@@ -9,6 +9,7 @@ from data import *
 from overlay import *
 from text import *
 from mouse import *
+from lightSource import *
 
 
 class Tile():
@@ -80,11 +81,13 @@ class InvTile():
 
 
 class Inventory():
-    def __init__(self):
+    def __init__(self, player):
+        self.player = player
         self.items_tiles = []
         self.items = {}
         self.crafting_tiles = []
         self.default_tool = 'god'
+        player.click_action = 'gather'
         self.equiped = self.default_tool
         self.equiped_tile = None
         self.pickup_start = None
@@ -148,11 +151,9 @@ class Inventory():
                     item.set_item(item_to_add, to_add_now, item_image)
                     if item_count == 0:
                         break
-        print(self.items)
 
     def add_item_from_data(self, en_data):
         for i in range(len(en_data['yield'])):
-            # print(en_data['yield'][i])
             chance = en_data['yield'][i][2]
             if random.random() * 100 <= chance:
                 item_to_add = en_data['yield'][i][0]
@@ -160,7 +161,6 @@ class Inventory():
                 self.add_item(item_to_add, item_count)
                 # if low change was hit, only yield items from that loot table
                 break
-        # print(self.items)
 
     def delete_item(self, item, count):
         for inv_tile in self.items_tiles:
@@ -252,6 +252,13 @@ class Inventory():
         if input.key_clicked['q']:
             self.equiped = self.default_tool
             self.equiped_tile = None
+        # deselect equiped item when it no longer exists
+        try:
+            if self.equiped_tile.item is None:
+                self.equiped = self.default_tool
+                self.equiped_tile = None
+        except:pass
+        self.player.set_click_action(action[self.equiped])
 
     def check_crafting(self):
         for crafting_tile in self.crafting_tiles:
@@ -262,7 +269,6 @@ class Inventory():
     def update(self):
         self.set_inv_en()
         self.set_equiped()
-        # print(self.equiped)
 
         if self.action == 'pickup':
             self.iterate_pickup()
@@ -279,7 +285,6 @@ class Inventory():
         if mouse.clicked and self.state == 'inventory':
             over = self.mouse_over_inv_tile()
             if over is not None:
-                # print(over.row,over.col)
                 if self.picked_inv_tile is None:
                     self.picked_inv_tile = over
                 else:
@@ -296,7 +301,6 @@ class Inventory():
         tile1.update_item(tile2_item, tile2_item_count, tile2_image)
 
     def toggle_inventory(self):
-        # print('from aplyer',display.window_size, display.window_size_small)
         if self.state == 'inventory':
             self.state = 'hotbar'
             player.click_action = 'gather'
@@ -308,6 +312,7 @@ class Inventory():
             player.click_action = 'inventory'
 
     def draw(self):
+        print(self.equiped)
         # draw the ui of the hotbar and inventory
         if self.state == 'hotbar':
             self.hotbar_en.draw(display.display, False)
@@ -350,7 +355,7 @@ class Player(Entity):
 
         self.last_facing_direction = 0
         self.collission_types = {'top': False, 'left': False, 'bottom': False, 'right': False}
-        self.inventory = Inventory()
+        self.inventory = Inventory(self)
 
         self.z = 0
         self.z_target = self.speed
@@ -383,18 +388,24 @@ class Player(Entity):
 
         self.bob()
 
+    def set_click_action(self, action):
+        self.click_action = action
+
     def update_highlight(self):
         chunk_xx = int(self.mouse.x // (map_render.tile_size * map_render.chunk_size))
         chunk_yy = int(self.mouse.y // (map_render.tile_size * map_render.chunk_size))
-        dx = [-1, 0, 1]
-        dy = [-1, 0, 1]
+        original_chunk = str(chunk_xx) + ';' + str(chunk_yy)
         if self.click_action == 'gather':
+            dx = [-1, 0, 1]
+            dy = [-1, 0, 1]
             for chunk_x in dx:
                 for chunk_y in dy:
                     chunk = str(chunk_x + chunk_xx) + ';' + str(chunk_y + chunk_yy)
                     if chunk in map_render.world_map:
                         for en in map_render.world_map[chunk]:
                             if en.pickupable and self.in_range_and_mouseover(en):
+                                # gather action
+                                # if equiped item cannot mine
                                 if self.inventory.equiped not in entity_data[en.name]['gather_time']: break
                                 pygame.draw.rect(display.display, colors['purple'],
                                                  (en.rect.x - camera.x, en.rect.y - camera.y, en.rect.w, en.rect.h), 1)
@@ -402,6 +413,26 @@ class Player(Entity):
                                     self.inventory.reset_pickup()
                                     self.inventory.init_pickup(en, chunk)
                                 return
+        elif self.click_action == 'place':
+            # place action
+            new_en = map_render.entity_from_data(self.inventory.equiped, mouse.x // map_render.tile_size,
+                                                 mouse.y // map_render.tile_size)
+            #if self.mouse.clicked and not map_render.mouse_over_entity() and mouse.distance_from_player(self) <= self.pickup_range:
+            if self.mouse.clicked and map_render.collided_with(new_en,map_render.entities) == [] and mouse.distance_from_player(
+                    self) <= self.pickup_range:
+                # new_en = map_render.entity_from_data(self.inventory.equiped, mouse.x // map_render.tile_size,
+                #                                      mouse.y // map_render.tile_size)
+                # remove from inventory
+                self.inventory.delete_item(self.inventory.equiped,1)
+                # add it in world map
+                map_render.world_map[original_chunk].append(new_en)
+                print(new_en)
+                try:
+                    # add light source
+                    if entity_data[self.inventory.equiped]['is_light_source']:
+                        light_sources.append(LightSource((0, 0), 100, new_en.rect, True))
+                except:pass
+
 
     def collission_test(self, rect, tiles):
         hit_list = []
