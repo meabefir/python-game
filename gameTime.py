@@ -2,17 +2,18 @@ import pygame
 from display import *
 from helper import *
 from lightSource import *
+from mapRender import *
 
 class GameTime():
     def __init__(self):
-        self.time = 1200
+        self.time = 2000
         self.day_length = 2400
         self.sunset = 2000
         self.sunrise = 500
         self.gray_shade = 255
         self.min_gray_shade = 0
         self.max_grey_shade = 255
-        self.time_speed = .1
+        self.time_speed = .5
 
     def update(self):
         #print(self.time)
@@ -24,7 +25,8 @@ class GameTime():
 
         if self.time >= self.sunset or self.time <= self.sunrise+self.max_grey_shade/self.time_speed:
             for light in light_sources:
-                light.draw(black)
+                if light.target in map_render.entities:
+                    light.draw(black)
 
         display.display.blit(black, (0, 0), special_flags=pygame.BLEND_RGB_MULT)
 

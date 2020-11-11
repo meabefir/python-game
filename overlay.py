@@ -4,6 +4,7 @@ from mapRender import *
 from camera import *
 
 pygame.init()
+font = pygame.font.SysFont('calibri',3)
 
 class ActionOverlay():
     def __init__(self,target,type,full):

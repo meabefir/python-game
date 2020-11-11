@@ -2,18 +2,12 @@ stack_size = {
     'wood': 99,
     'rock': 99,
     'branch': 99,
-    'campfire': 101,
-    'pickaxe':1
-}
-
-action = {
-    'god': 'gather',
-    'hand': 'gather',
-    'wood': None,
-    'rock': None,
-    'branch': None,
-    'campfire': 'place',
-    'pickaxe': 'gather'
+    'campfire': 10,
+    'furnace': 10,
+    'pickaxe': 1,
+    'iron-ore': 99,
+    'iron-bar': 99,
+    'grass':99
 }
 
 colors = {
@@ -22,10 +16,31 @@ colors = {
 
 crafting = {
     'campfire': [('wood', 5), ('branch', 10)],
-    'pickaxe': [('wood', 3), ('rock', 5)]
+    'furnace': [('rock', 10), ('wood', 20)]
 }
 
 entity_data = {
+    'god': {
+        'action': 'gather',
+        'modifier': 5
+    },
+    'furnace': {
+        'name': 'furnace',
+        'size': [16, 16],
+        'rect_size': [16, 16],
+        'rect_offset': [0, 0],
+        'world_offset': [0, 0],
+        'gather_time': {'god': .1, 'pickaxe': 1},
+        'yield': [('furnace', (1, 1), 100)],
+        'is_barrier': True,
+        'is_pickupable': True,
+        'action': 'place',
+        'crafting': {
+            'iron-bar': [('iron-ore', 2)]
+        },
+        'height': 0,
+        'type': 'entity'
+    },
     'pickaxe': {
         'name': 'pickaxe',
         'size': [16, 16],
@@ -36,6 +51,7 @@ entity_data = {
         'yield': [('pickaxe', (1, 1), 100)],
         'is_barrier': False,
         'is_pickupable': True,
+        'action': 'gather',
         'height': 0,
         'type': 'entity'
     },
@@ -50,6 +66,9 @@ entity_data = {
         'is_barrier': True,
         'is_pickupable': True,
         'is_light_source': True,
+        'animations': ['campfire-idle'],
+        'animation-duration': {'campfire-idle': 10},
+        'action': 'place',
         'height': 10,
         'type': 'entity'
     },
@@ -63,6 +82,7 @@ entity_data = {
         'yield': [('wood', (8, 12), 20), ('wood', (4, 8), 100)],
         'is_barrier': True,
         'is_pickupable': True,
+        'action': None,
         'height': 10,
         'type': 'entity'
     },
@@ -76,7 +96,78 @@ entity_data = {
         'yield': [('branch', (3, 4), 20), ('branch', (1, 2), 100)],
         'is_barrier': False,
         'is_pickupable': True,
+        'action': None,
         'height': 0,
+        'type': 'entity'
+    },
+    'wood': {
+        'name': 'wood',
+        'size': [15, 5],
+        'rect_size': [15, 5],
+        'rect_offset': [0, 0],
+        'world_offset': [0, 10],
+        'gather_time': {'god': .1, 'axe': 1},
+        'yield': [('wood', (1, 1), 100)],
+        'is_barrier': False,
+        'is_pickupable': True,
+        'action': None,
+        'height': 0,
+        'type': 'entity'
+    },
+    'rock': {
+        'name': 'rock',
+        'size': [15, 5],
+        'rect_size': [15, 5],
+        'rect_offset': [0, 0],
+        'world_offset': [0, 10],
+        'gather_time': {'god': .1, 'pickaxe': 1},
+        'yield': [('rock', (1, 1), 100)],
+        'is_barrier': False,
+        'is_pickupable': True,
+        'action': None,
+        'height': 0,
+        'type': 'entity'
+    },
+    'iron-ore': {
+        'name': 'iron-ore',
+        'size': [16, 16],
+        'rect_size': [16, 16],
+        'rect_offset': [0, 0],
+        'world_offset': [0, 0],
+        'gather_time': {'god': .1, 'hand': .5},
+        'yield': [('iron-ore', (1, 1), 100)],
+        'is_barrier': False,
+        'is_pickupable': True,
+        'action': None,
+        'height': 0,
+        'type': 'entity'
+    },
+    'iron-bar': {
+        'name': 'iron-bar',
+        'size': [16, 16],
+        'rect_size': [16, 16],
+        'rect_offset': [0, 0],
+        'world_offset': [0, 0],
+        'gather_time': {'god': .1, 'hand': .5},
+        'yield': [('iron-bar', (1, 1), 100)],
+        'is_barrier': False,
+        'is_pickupable': True,
+        'action': None,
+        'height': 0,
+        'type': 'entity'
+    },
+    'iron-ore-1': {
+        'name': 'iron-ore',
+        'size': [16, 16],
+        'rect_size': [16, 16],
+        'rect_offset': [0, 0],
+        'world_offset': [0, 10],
+        'gather_time': {'god': .1, 'pickaxe': 1},
+        'yield': [('iron-ore', (1, 1), 100)],
+        'is_barrier': True,
+        'is_pickupable': True,
+        'action': None,
+        'height': 10,
         'type': 'entity'
     },
     'rock-1': {
@@ -89,7 +180,8 @@ entity_data = {
         'yield': [('rock', (1, 1), 100)],
         'is_barrier': True,
         'is_pickupable': True,
-        'height': 0,
+        'action': None,
+        'height': 10,
         'type': 'entity'
     },
     'rock-2': {
@@ -102,7 +194,8 @@ entity_data = {
         'yield': [('rock', (3, 4), 50), ('rock', (1, 2), 100)],
         'is_barrier': True,
         'is_pickupable': True,
-        'height': 0,
+        'action': None,
+        'height': 10,
         'type': 'entity'
     },
     'rock-3': {
@@ -115,6 +208,7 @@ entity_data = {
         'yield': [('rock', (4, 5), 50), ('rock', (2, 3), 100)],
         'is_barrier': True,
         'is_pickupable': True,
+        'action': None,
         'height': 0,
         'type': 'entity'
     },
@@ -128,6 +222,7 @@ entity_data = {
         'yield': [],
         'is_barrier': True,
         'is_pickupable': False,
+        'action': None,
         'height': 0,
         'type': 'tile'
     },
@@ -141,6 +236,7 @@ entity_data = {
         'yield': [('sand', (1, 1), 100)],
         'is_barrier': False,
         'is_pickupable': False,
+        'action': None,
         'height': 10,
         'type': 'tile'
     },
@@ -154,6 +250,7 @@ entity_data = {
         'yield': [('grass', (1, 1), 100)],
         'is_barrier': False,
         'is_pickupable': False,
+        'action': 'place',
         'height': 20,
         'type': 'tile'
     },
@@ -167,6 +264,7 @@ entity_data = {
         'yield': [('dirt', (1, 1), 100)],
         'is_barrier': False,
         'is_pickupable': False,
+        'action': None,
         'height': 30,
         'type': 'tile'
     },
@@ -180,6 +278,7 @@ entity_data = {
         'yield': [('stone', (1, 1), 100)],
         'is_barrier': False,
         'is_pickupable': False,
+        'action': None,
         'height': 25,
         'type': 'tile'
     },

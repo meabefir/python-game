@@ -1,5 +1,6 @@
 import pygame
 pygame.init()
+font = pygame.font.SysFont('calibri',3)
 
 class Debug():
     def __init__(self):

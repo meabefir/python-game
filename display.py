@@ -2,6 +2,7 @@ import pygame
 from helper import *
 
 pygame.init()
+font = pygame.font.SysFont('calibri',3)
 
 class Display():
     def __init__(self):

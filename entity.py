@@ -1,5 +1,8 @@
 import pygame
 from camera import *
+from loader import *
+from animation import *
+from data import *
 
 
 class Entity():
@@ -24,6 +27,12 @@ class Entity():
         self.rect_x_offset = rect_x_offset
         self.rect_y_offset = rect_y_offset
 
+        try:
+            self.animation = Animation(entity_data[self.name]['animations'],
+                                       entity_data[self.name]['animation-duration'])
+        except:
+            pass
+
     def set_height(self, height):
         self.height = height
 
@@ -41,6 +50,13 @@ class Entity():
                          (self.rect.x - camera.x, self.rect.y - camera.y, self.rect.w, self.rect.h), 1)
 
     def draw(self, surface, camera_influence=True):
+        try:
+            self.animation.iterate_animation_frame()
+            real_animation_frame = int(self.animation.animation_frame)
+            self.image = self.animation.animations[self.animation.current_animation][real_animation_frame]
+        except Exception as e:
+            pass
+
         if camera_influence:
             surface.blit(self.image,
                          (self.rect.x - self.rect_x_offset - camera.x, self.rect.y - self.rect_y_offset - camera.y))

@@ -7,6 +7,7 @@ from data import *
 from particleSystem import *
 from mouse import *
 
+
 class MapRender():
     def __init__(self):
         self.entities = []
@@ -27,7 +28,7 @@ class MapRender():
         self.tile_size = 16
         self.chunk_size = 8
 
-    def collided_with(self,en_to_check,entities):
+    def collided_with(self, en_to_check, entities):
         collide = []
         for en in entities:
             if en_to_check.rect.colliderect(en.rect):
@@ -36,7 +37,7 @@ class MapRender():
 
     def mouse_over_entity(self):
         for en in self.entities:
-            if en.rect.collidepoint(mouse.x,mouse.y):
+            if en.rect.collidepoint(mouse.x, mouse.y):
                 return True
         return False
 
@@ -72,14 +73,13 @@ class MapRender():
         # print(height)
         if height > 60:
             img = 'stone'
-            # if height2 > 55:
-            #     img = 'iron'
+            if height2 > 45 and random.random() <= .5: elements.append(
+                self.entity_from_data(f'iron-ore-{random.randint(1, 1)}', x, y))
             # elif 50 > height2 > 40:
             #     img = 'coal'
         elif 48 < height <= 66:
             img = 'dirt'
-            if random.randint(1, 2) == 1:
-                elements.append(self.entity_from_data(f'rock-{random.randint(1, 3)}', x, y))
+            if random.randint(1, 2) == 1: elements.append(self.entity_from_data(f'rock-{random.randint(1, 3)}', x, y))
         elif 22 < height <= 48:
             img = 'grass'
             if random.randint(1, 15) == 1:
@@ -137,8 +137,7 @@ class MapRender():
                 if random.randint(1, 5000) == 1:
                     particle_system.add_particle(tile.rect.x + random.randint(0, self.tile_size),
                                                  tile.rect.y + random.randint(0, self.tile_size))
-            if debug.active:
-                tile.draw_rect(display.display)
+            # if debug.active: tile.draw_rect(display.display)
 
     def draw_entities(self, surface):
         for en in sorted(self.entities, key=lambda en: en.height + en.rect.y):

@@ -1,4 +1,4 @@
-import pygame, math, time
+import pygame, math, time, copy
 from entity import *
 from helper import *
 from input import *
@@ -10,6 +10,7 @@ from overlay import *
 from text import *
 from mouse import *
 from lightSource import *
+from animation import *
 
 
 class Tile():
@@ -23,15 +24,16 @@ class Tile():
 
 
 class CraftingTile():
-    def __init__(self, name, x, y):
+    def __init__(self, name, x, y, inv):
+        self.inv = inv
         self.name = name
         self.en = Entity(name, images['crafting-window'][0], x, y, 0, 0)
         self.tiles = []
         self.tiles.append(Tile(self.en.rect.x + 2, self.en.rect.y + 2, name, 1))
-        for i in range(len(crafting[name])):
+        for i in range(len(self.inv.crafting[name])):
             # name = crafting[name][i][0]
             # count = crafting[name][i][1]
-            name2, count = crafting[name][i]
+            name2, count = self.inv.crafting[name][i]
             self.tiles.append(Tile(self.en.rect.x + 19 + i * 16, self.en.rect.y + 2, name2, count))
 
     def scroll(self, ammount):
@@ -99,6 +101,8 @@ class Inventory():
         self.cols = 10
         self.crafting_scroll_ammount = 8
         self.crafting_current_scroll = 0
+        self.last_craft = time.time()
+        self.crafting = crafting
 
         self.picked_inv_tile = None
 
@@ -106,6 +110,8 @@ class Inventory():
         for row in range(self.rows):
             for col in range(self.cols):
                 self.items_tiles.append(InvTile(self, row + 1, col + 1))
+
+        self.add_item('campfire', 10)
 
     def set_inv_en(self):
         self.hotbar_en = Entity('hotbar', images['hotbar'][0],
@@ -157,7 +163,10 @@ class Inventory():
             chance = en_data['yield'][i][2]
             if random.random() * 100 <= chance:
                 item_to_add = en_data['yield'][i][0]
-                item_count = random.randint(en_data['yield'][i][1][0], en_data['yield'][i][1][1])
+                modifier = entity_data[self.equiped].get('modifier')
+                if modifier is None:
+                    modifier = 1
+                item_count = random.randint(en_data['yield'][i][1][0], en_data['yield'][i][1][1]) * modifier
                 self.add_item(item_to_add, item_count)
                 # if low change was hit, only yield items from that loot table
                 break
@@ -175,14 +184,14 @@ class Inventory():
                     inv_tile.update_item(None, 0, images['none-img'][0])
 
     def craft(self, name):
-        for item, count in crafting[name]:
+        for item, count in self.crafting[name]:
             self.delete_item(item, count)
         self.add_item(name, 1)
         self.create_crafting_tiles()
 
     def create_crafting_tiles(self):
         self.crafting_tiles = []
-        for item, recipe in crafting.items():
+        for item, recipe in self.crafting.items():
             for ingredient in recipe:
                 name, count = ingredient
                 if name not in self.items or self.items[name] < count:
@@ -190,7 +199,7 @@ class Inventory():
             else:
                 self.crafting_tiles.append(
                     CraftingTile(item, display.window_size_small[0] - 72,
-                                 self.crafting_current_scroll + 2 + len(self.crafting_tiles) * 20))
+                                 self.crafting_current_scroll + 2 + len(self.crafting_tiles) * 20, self))
 
     def init_pickup(self, en, chunk):
         if self.equiped not in entity_data[en.name]['gather_time']: return
@@ -257,16 +266,23 @@ class Inventory():
             if self.equiped_tile.item is None:
                 self.equiped = self.default_tool
                 self.equiped_tile = None
-        except:pass
-        self.player.set_click_action(action[self.equiped])
+        except:
+            pass
+        self.player.set_click_action(entity_data[self.equiped]['action'])
 
     def check_crafting(self):
         for crafting_tile in self.crafting_tiles:
             if crafting_tile.en.rect.collidepoint(mouse.window_x, mouse.window_y):
                 self.craft(crafting_tile.name)
+                self.last_craft = time.time()
                 break
 
     def update(self):
+        self.crafting = copy.copy(crafting)
+        for en in self.player.entities_in_range:
+            if 'crafting' in entity_data[en.name].keys():
+                self.crafting.update(entity_data[en.name]['crafting'])
+        self.create_crafting_tiles()
         self.set_inv_en()
         self.set_equiped()
 
@@ -278,7 +294,7 @@ class Inventory():
             self.toggle_inventory()
 
         # craft items if inventory open
-        if self.state == 'inventory' and mouse.clicked:
+        if self.state == 'inventory' and (mouse.clicked or (mouse.held and time.time() - self.last_craft >= .1)):
             self.check_crafting()
 
         # pick inventory tile
@@ -307,12 +323,10 @@ class Inventory():
             self.picked_inv_tile = None
             self.crafting_current_scroll = 0
         else:
-            self.create_crafting_tiles()
             self.state = 'inventory'
-            player.click_action = 'inventory'
+            self.player.click_action = 'inventory'
 
     def draw(self):
-        print(self.equiped)
         # draw the ui of the hotbar and inventory
         if self.state == 'hotbar':
             self.hotbar_en.draw(display.display, False)
@@ -364,6 +378,7 @@ class Player(Entity):
         self.pickup_range = 50
         self.click_action = 'gather'
         self.action = None
+        self.entities_in_range = []
 
         self.fly = False
         self.fly_speed = 10
@@ -376,6 +391,7 @@ class Player(Entity):
         self.mouse = mouse
         self.inventory.update()
         self.get_movement()
+        self.entities_in_range = self.set_entities_in_range()
 
         self.move(self.movement, [en.rect for en in map_render.collideables])
 
@@ -388,6 +404,21 @@ class Player(Entity):
 
         self.bob()
 
+    def set_entities_in_range(self):
+        in_range = []
+        chunk_xx = int(self.mouse.x // (map_render.tile_size * map_render.chunk_size))
+        chunk_yy = int(self.mouse.y // (map_render.tile_size * map_render.chunk_size))
+        dx = [-1, 0, 1]
+        dy = [-1, 0, 1]
+        for chunk_x in dx:
+            for chunk_y in dy:
+                chunk = str(chunk_x + chunk_xx) + ';' + str(chunk_y + chunk_yy)
+                if chunk in map_render.world_map:
+                    for en in map_render.world_map[chunk]:
+                        if math.dist((self.center_x, self.center_y), (en.center_x, en.center_y)) <= self.pickup_range:
+                            in_range.append(en)
+        return in_range
+
     def set_click_action(self, action):
         self.click_action = action
 
@@ -395,6 +426,8 @@ class Player(Entity):
         chunk_xx = int(self.mouse.x // (map_render.tile_size * map_render.chunk_size))
         chunk_yy = int(self.mouse.y // (map_render.tile_size * map_render.chunk_size))
         original_chunk = str(chunk_xx) + ';' + str(chunk_yy)
+        # if inventory is opened
+        if self.inventory.state == 'inventory': return
         if self.click_action == 'gather':
             dx = [-1, 0, 1]
             dy = [-1, 0, 1]
@@ -417,22 +450,20 @@ class Player(Entity):
             # place action
             new_en = map_render.entity_from_data(self.inventory.equiped, mouse.x // map_render.tile_size,
                                                  mouse.y // map_render.tile_size)
-            #if self.mouse.clicked and not map_render.mouse_over_entity() and mouse.distance_from_player(self) <= self.pickup_range:
-            if self.mouse.clicked and map_render.collided_with(new_en,map_render.entities) == [] and mouse.distance_from_player(
-                    self) <= self.pickup_range:
-                # new_en = map_render.entity_from_data(self.inventory.equiped, mouse.x // map_render.tile_size,
-                #                                      mouse.y // map_render.tile_size)
+            # if self.mouse.clicked and not map_render.mouse_over_entity() and mouse.distance_from_player(self) <= self.pickup_range:
+            if self.mouse.held and map_render.collided_with(new_en,
+                                                            map_render.entities) == [] and mouse.distance_from_player(
+                self) <= self.pickup_range:
                 # remove from inventory
-                self.inventory.delete_item(self.inventory.equiped,1)
+                self.inventory.delete_item(self.inventory.equiped, 1)
                 # add it in world map
                 map_render.world_map[original_chunk].append(new_en)
-                print(new_en)
                 try:
                     # add light source
                     if entity_data[self.inventory.equiped]['is_light_source']:
                         light_sources.append(LightSource((0, 0), 100, new_en.rect, True))
-                except:pass
-
+                except:
+                    pass
 
     def collission_test(self, rect, tiles):
         hit_list = []

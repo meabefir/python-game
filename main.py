@@ -15,9 +15,9 @@ from gameTime import *
 from mouse import *
 from particleSystem import *
 
-clock = pygame.time.Clock()
 pygame.init()
-
+clock = pygame.time.Clock()
+font = pygame.font.SysFont('calibri',3)
 ###############################################################################
 colors = {'aqua': (198, 252, 255)}
 
@@ -42,6 +42,7 @@ while True:
     player.update(mouse)
     camera.update()
 
+    map_render.render_chunks(display.window_size_small, display.display)
     ################################### RENDER MAP
 
     map_render.draw_tiles(display.display)
@@ -51,7 +52,6 @@ while True:
 
     player.update_highlight()
 
-    map_render.render_chunks(display.window_size_small, display.display)
 
     particle_system.update()
 
